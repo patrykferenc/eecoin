@@ -3,66 +3,67 @@ package node
 import "log/slog"
 
 type Peers struct {
-	peers         map[string]*Peer
-	peersStatuses map[Status][]*Peer // todo can be map I suppose
+	peersStatuses map[Status]map[string]*Peer
 }
 
 func (p *Peers) All() []Peer {
-	allPeers := make([]Peer, len(p.peers))
-	i := 0
-	for _, peer := range p.peers {
-		allPeers[i] = *peer
-		i++
+	var allPeers []Peer
+	for _, statusPeers := range p.peersStatuses {
+		for _, peer := range statusPeers {
+			allPeers = append(allPeers, *peer)
+		}
 	}
 	return allPeers
 }
 
 func (p *Peers) Healthy() []Peer {
-	healthyPeers := p.peersStatuses[StatusHealthy]
-	copiedPeers := make([]Peer, len(healthyPeers))
-	for i, peer := range healthyPeers {
+	healthyPeersMap := p.peersStatuses[StatusHealthy]
+	copiedPeers := make([]Peer, len(healthyPeersMap))
+	i := 0
+	for _, peer := range healthyPeersMap {
 		copiedPeers[i] = *peer
+		i++
 	}
 	return copiedPeers
 }
 
 func (p *Peers) UpdatePeerStatus(host string, status Status) {
-	peer, ok := p.peers[host]
-	if !ok {
-		slog.Warn("peer %s not found but tried to update status to %s", host, status.String())
-		return
-	}
+	var peer *Peer
+	var found bool
 
-	currentStatusPeers := p.peersStatuses[peer.Status]
-	seen := false
-	for i, pp := range currentStatusPeers {
-		if pp.Host == host {
-			p.peersStatuses[peer.Status] = append(currentStatusPeers[:i], currentStatusPeers[i+1:]...)
-			seen = true
+	for _, peersMap := range p.peersStatuses {
+		if p, ok := peersMap[host]; ok {
+			peer = p
+			delete(peersMap, host)
+			found = true
 			break
 		}
 	}
-	if !seen {
-		slog.Warn("peer %s not found in status %s", host, peer.Status.String())
-		return
+
+	if !found {
+		slog.Info("new peer %s with status %s", host, status.String())
+		peer = &Peer{Host: host, Status: status}
 	}
 
 	peer.Status = status
 
-	p.peersStatuses[status] = append(p.peersStatuses[status], peer)
+	if p.peersStatuses[status] == nil {
+		p.peersStatuses[status] = make(map[string]*Peer)
+	}
+	p.peersStatuses[status][host] = peer
 }
 
 func NewPeers(peers []*Peer) *Peers {
-	peerMap := make(map[string]*Peer, len(peers))
-	peerStatuses := make(map[Status][]*Peer, 3)
+	peerStatuses := make(map[Status]map[string]*Peer, 3)
 
 	for _, peer := range peers {
-		peerMap[peer.Host] = peer
-		peerStatuses[peer.Status] = append(peerStatuses[peer.Status], peer)
+		if peerStatuses[peer.Status] == nil {
+			peerStatuses[peer.Status] = make(map[string]*Peer)
+		}
+		peerStatuses[peer.Status][peer.Host] = peer
 	}
 
 	return &Peers{
-		peers:         peerMap,
 		peersStatuses: peerStatuses,
 	}
 }
