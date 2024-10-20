@@ -14,7 +14,7 @@ var (
 
 const defaultRsaBitSize = 2048
 
-type RsaWallet struct {
+type Rsa struct {
 	mainId *Key[*rsa.PrivateKey, crypto.PublicKey]
 	keys   map[crypto.PublicKey]privateKeyElement
 }
@@ -24,7 +24,7 @@ type privateKeyElement struct {
 	present bool
 }
 
-func (w *RsaWallet) SetMainIdentity(key *Key[*rsa.PrivateKey, crypto.PublicKey]) error {
+func (w *Rsa) SetMainIdentity(key *Key[*rsa.PrivateKey, crypto.PublicKey]) error {
 	if key.private != nil {
 		w.mainId = &Key[*rsa.PrivateKey, crypto.PublicKey]{private: key.private, public: key.private.PublicKey, algType: RSA}
 		return nil
@@ -32,7 +32,7 @@ func (w *RsaWallet) SetMainIdentity(key *Key[*rsa.PrivateKey, crypto.PublicKey])
 	return ErrPrivateKeyNotFound
 }
 
-func (w *RsaWallet) Add(key Key[*rsa.PrivateKey, crypto.PublicKey]) error {
+func (w *Rsa) Add(key Key[*rsa.PrivateKey, crypto.PublicKey]) error {
 	if key.private != nil {
 		pub := key.private.Public()
 		w.keys[pub] = privateKeyElement{key: key.private, present: true}
@@ -42,7 +42,7 @@ func (w *RsaWallet) Add(key Key[*rsa.PrivateKey, crypto.PublicKey]) error {
 	}
 	return NoKeysFound
 }
-func (w *RsaWallet) Type() Algorithm {
+func (w *Rsa) Type() Algorithm {
 	return RSA
 }
 
@@ -54,8 +54,8 @@ func NewRsaKey() (Key[*rsa.PrivateKey, crypto.PublicKey], error) {
 	return Key[*rsa.PrivateKey, crypto.PublicKey]{private: key, public: key.Public(), algType: RSA}, nil
 }
 
-func NewRsaWallet(mainId *Key[*rsa.PrivateKey, crypto.PublicKey]) *RsaWallet {
-	wallet := &RsaWallet{keys: make(map[crypto.PublicKey]privateKeyElement), mainId: mainId}
+func NewRsaWallet(mainId *Key[*rsa.PrivateKey, crypto.PublicKey]) *Rsa {
+	wallet := &Rsa{keys: make(map[crypto.PublicKey]privateKeyElement), mainId: mainId}
 	_ = wallet.Add(*mainId)
 	return wallet
 }
