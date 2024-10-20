@@ -11,3 +11,9 @@ type PeersRepository interface {
 type MessageSender interface {
 	SendMessage(peers Peers, transaction *Transaction) error
 }
+
+type NoOpMessageSender struct{}
+
+func (s *NoOpMessageSender) SendMessage(peers Peers, transaction *Transaction) error {
+	return nil
+}
