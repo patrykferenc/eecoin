@@ -45,7 +45,7 @@ func (h *acceptMessageHandler) Handle(cmd AcceptMessage) error {
 		return fmt.Errorf("can not accept message: failed to save transaction: %w", err)
 	}
 
-	event, err := event.New(node.SendMessageEvent{TransactionID: cmd.transaction.ID})
+	event, err := event.New(node.SendMessageEvent{TransactionID: cmd.transaction.ID}, "x.message.send")
 	if err != nil {
 		return fmt.Errorf("can not accept message: failed to create event: %w", err)
 	}

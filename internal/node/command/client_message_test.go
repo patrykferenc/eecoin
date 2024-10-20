@@ -32,6 +32,7 @@ func TestAcceptClientMessageHandler_shouldWork(t *testing.T) {
 		From:    "from",
 		To:      "to",
 	})
+	assert.NoError(t, err)
 	err = handler.Handle(cmd)
 	assert.NoError(t, err)
 
@@ -55,6 +56,7 @@ func TestAcceptClientMessageHandler_shouldNotPublish_whenTransactionAlreadySeen(
 		From:    "from",
 		To:      "to",
 	})
+	assert.NoError(t, err)
 
 	// when
 	err = handler.Handle(cmd)
@@ -64,7 +66,8 @@ func TestAcceptClientMessageHandler_shouldNotPublish_whenTransactionAlreadySeen(
 	assert.Len(t, publisher.Published(), 1)
 
 	// and given
-	seen.MarkSeen(transactionID)
+	err = seen.MarkSeen(transactionID)
+	assert.NoError(t, err)
 	// and when
 	err = handler.Handle(cmd)
 	// then

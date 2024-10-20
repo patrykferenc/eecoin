@@ -69,7 +69,7 @@ func (h *sendMessageHandler) Handle(cmd SendMessage) error {
 		return fmt.Errorf("error when sending message: %w", err)
 	}
 
-	event, err := event.New(&node.MessageSentEvent{TransactionID: cmd.TransactionID})
+	event, err := event.New(&node.MessageSentEvent{TransactionID: cmd.TransactionID}, "x.message.sent")
 	if err != nil {
 		return fmt.Errorf("can not send message: %w", err)
 	}

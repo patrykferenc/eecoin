@@ -31,7 +31,8 @@ func TestSendMessageHandeler_shouldWork(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, handler)
 
-	repository.Save(&node.Transaction{ID: "transaction-id", To: wallet.ID("to"), From: wallet.ID("from"), Timestamp: time.Now(), Content: "my silly message"})
+	err = repository.Save(&node.Transaction{ID: "transaction-id", To: wallet.ID("to"), From: wallet.ID("from"), Timestamp: time.Now(), Content: "my silly message"})
+	assert.NoError(t, err)
 
 	// when
 	err = handler.Handle(command.SendMessage{TransactionID: "transaction-id"})
