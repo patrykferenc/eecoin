@@ -38,12 +38,9 @@ func TestChannelBroker_shouldPublish_whenOneSubscriber(t *testing.T) {
 
 	go func() {
 		defer wg.Done()
-		for {
-			select {
-			case e := <-sub:
-				assert.Equal(event, e)
-				return
-			}
+		for e := range sub {
+			assert.Equal(event, e)
+			return
 		}
 	}()
 
