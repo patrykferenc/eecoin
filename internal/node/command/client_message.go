@@ -9,7 +9,7 @@ import (
 )
 
 type AcceptClientMessage struct {
-	transaction *node.Transaction
+	transaction *node.Transaction // TODO: can potentially be refactored to just plain fields?
 }
 
 func NewAcceptClientMessage(transaction *node.Transaction) (AcceptClientMessage, error) {

@@ -20,6 +20,7 @@ type Transaction struct {
 type InFlightTransactionRepository interface {
 	Save(transaction *Transaction) error
 	Get(id blockchain.TransactionID) (*Transaction, error)
+	Discard(id blockchain.TransactionID) error
 }
 
 type SimpleInFlightTransactionRepository struct {
@@ -44,8 +45,14 @@ func (r *SimpleInFlightTransactionRepository) Get(id blockchain.TransactionID) (
 	return r.transactions[id], nil
 }
 
+func (r *SimpleInFlightTransactionRepository) Discard(id blockchain.TransactionID) error {
+	delete(r.transactions, id)
+	return nil
+}
+
 type SeenTransactionRepository interface {
 	Seen(id blockchain.TransactionID) (bool, error)
+	MarkSeen(id blockchain.TransactionID) error
 }
 
 type SimpleSeenTransactionRepository struct {
