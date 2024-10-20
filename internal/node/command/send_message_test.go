@@ -1,17 +1,18 @@
-package command
+package command_test
 
 import (
 	"testing"
 	"time"
 
 	"github.com/patrykferenc/eecoin/internal/common/event/eventtest"
+	"github.com/patrykferenc/eecoin/internal/node/command"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
 	"github.com/patrykferenc/eecoin/internal/wallet"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSendMessageHandler_shouldNotCreate(t *testing.T) {
-	handler, err := NewSendMessageHandler(nil, nil, nil, nil, nil)
+	handler, err := command.NewSendMessageHandler(nil, nil, nil, nil, nil)
 	assert.Error(t, err)
 	assert.Nil(t, handler)
 }
@@ -26,14 +27,14 @@ func TestSendMessageHandeler_shouldWork(t *testing.T) {
 	publisher := eventtest.NewMockedPublisher()
 
 	// and given
-	handler, err := NewSendMessageHandler(repository, seen, sender, peersRepo, publisher)
+	handler, err := command.NewSendMessageHandler(repository, seen, sender, peersRepo, publisher)
 	assert.NoError(t, err)
 	assert.NotNil(t, handler)
 
 	repository.Save(&node.Transaction{ID: "transaction-id", To: wallet.ID("to"), From: wallet.ID("from"), Timestamp: time.Now(), Content: "my silly message"})
 
 	// when
-	err = handler.Handle(SendMessage{TransactionID: "transaction-id"})
+	err = handler.Handle(command.SendMessage{TransactionID: "transaction-id"})
 
 	// then
 	assert.NoError(t, err)
