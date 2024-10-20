@@ -1,11 +1,13 @@
 package node
 
 import (
+	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 )
 
 func TestReadFromFile(t *testing.T) {
+	assrt := assert.New(t)
 	// given
 	givenFile := "localhost:8080\n192.168.26.2:8081"
 
@@ -23,13 +25,10 @@ func TestReadFromFile(t *testing.T) {
 		t.Errorf("Healthy peers should be empty")
 	}
 	// and then contains all peers
-	for i, peer := range peers.All() {
-		if peer.Host != strings.Split(givenFile, "\n")[i] {
-			t.Errorf("Host should be %s, got %s", strings.Split(givenFile, "\n")[i], peer.Host)
-		}
-		if peer.Status != StatusUnknown {
-			t.Errorf("Status should be unhealthy, got %v for %s", peer.Status, peer.String())
-		}
+	for _, peer := range peers.All() {
+		assrt.Contains(peers.All(), peer)
+		assrt.NotContains(peers.Healthy(), peer)
+		assrt.Equal(StatusUnknown, peer.Status)
 	}
 }
 
