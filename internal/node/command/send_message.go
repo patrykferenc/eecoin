@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
+	"github.com/patrykferenc/eecoin/internal/common/event"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
 )
 
@@ -39,6 +40,7 @@ type sendMessageHandler struct {
 	seen             node.SeenTransactionRepository
 	sender           node.MessageSender
 	peeersRepository node.PeersRepository
+	publisher        event.Publisher
 }
 
 func (h *sendMessageHandler) Handle(cmd SendMessage) error {
@@ -67,14 +69,14 @@ func (h *sendMessageHandler) Handle(cmd SendMessage) error {
 		return fmt.Errorf("error when sending message: %w", err)
 	}
 
-	err = h.repository.Discard(cmd.TransactionID)
+	event, err := event.New(&node.MessageSentEvent{TransactionID: cmd.TransactionID})
 	if err != nil {
-		return fmt.Errorf("message was sent but not deleted: %w", err)
+		return fmt.Errorf("can not send message: %w", err)
 	}
 
-	err = h.seen.MarkSeen(cmd.TransactionID)
+	err = h.publisher.Publish(event)
 	if err != nil {
-		return fmt.Errorf("message was sent but not marked as seen: %w", err)
+		return fmt.Errorf("can not send message: %w", err)
 	}
 
 	return nil
@@ -85,6 +87,7 @@ func NewSendMessageHandler(
 	seen node.SeenTransactionRepository,
 	sender node.MessageSender,
 	peersRepository node.PeersRepository,
+	publisher event.Publisher,
 ) (SendMessageHandler, error) {
 	if repository == nil {
 		return nil, fmt.Errorf("repository is required")
@@ -98,11 +101,15 @@ func NewSendMessageHandler(
 	if peersRepository == nil {
 		return nil, fmt.Errorf("peersRepository is required")
 	}
+	if publisher == nil {
+		return nil, fmt.Errorf("publisher is required")
+	}
 
 	return &sendMessageHandler{
 		repository:       repository,
 		seen:             seen,
 		sender:           sender,
 		peeersRepository: peersRepository,
+		publisher:        publisher,
 	}, nil
 }

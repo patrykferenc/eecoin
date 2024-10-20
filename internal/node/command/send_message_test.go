@@ -4,13 +4,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/patrykferenc/eecoin/internal/common/event/eventtest"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
 	"github.com/patrykferenc/eecoin/internal/wallet"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestSendMessageHandler_shouldNotCreate(t *testing.T) {
-	handler, err := NewSendMessageHandler(nil, nil, nil, nil)
+	handler, err := NewSendMessageHandler(nil, nil, nil, nil, nil)
 	assert.Error(t, err)
 	assert.Nil(t, handler)
 }
@@ -22,9 +23,10 @@ func TestSendMessageHandeler_shouldWork(t *testing.T) {
 	sender := &mockMessageSender{}
 	peersToReturn := node.Peers{"localhost:2137", "localhost:1234"}
 	peersRepo := &mockPeers{peers: peersToReturn, err: nil}
+	publisher := eventtest.NewMockedPublisher()
 
 	// and given
-	handler, err := NewSendMessageHandler(repository, seen, sender, peersRepo)
+	handler, err := NewSendMessageHandler(repository, seen, sender, peersRepo, publisher)
 	assert.NoError(t, err)
 	assert.NotNil(t, handler)
 
@@ -37,13 +39,7 @@ func TestSendMessageHandeler_shouldWork(t *testing.T) {
 	assert.NoError(t, err)
 
 	// and then
-	transaction, err := repository.Get("transaction-id")
-	assert.NoError(t, err)
-	assert.Nil(t, transaction)
-	// and then
-	wasSeen, err := seen.Seen("transaction-id")
-	assert.NoError(t, err)
-	assert.True(t, wasSeen)
+	assert.Len(t, publisher.Published(), 1)
 }
 
 type mockMessageSender struct {
