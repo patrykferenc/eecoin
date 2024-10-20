@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
-	"github.com/patrykferenc/eecoin/internal/wallet"
+	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
 )
 
 type Transaction struct {

@@ -1,5 +1,7 @@
 package wallet
 
+type ID string
+
 type Algorithm int
 
 const (

@@ -7,7 +7,7 @@ import (
 	"github.com/patrykferenc/eecoin/internal/common/event/eventtest"
 	"github.com/patrykferenc/eecoin/internal/node/command"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
-	"github.com/patrykferenc/eecoin/internal/wallet"
+	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
 	"github.com/stretchr/testify/assert"
 )
 
