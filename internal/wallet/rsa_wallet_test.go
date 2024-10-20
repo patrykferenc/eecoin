@@ -15,6 +15,7 @@ func TestGenerateRsaKey(t *testing.T) {
 	rsaKeySizeInBits := 2048
 	bitsInByte := 8
 	rsaKey, _ := rsa.GenerateKey(rand.Reader, rsaKeySizeInBits)
+	pubFromKey := rsaKey.Public()
 
 	//when
 	result, err := NewRsaKey()
@@ -23,7 +24,7 @@ func TestGenerateRsaKey(t *testing.T) {
 	assertThat.NotNil(result)
 	assertThat.Nil(err)
 	assertThat.IsTypef(result.private, rsaKey, "Private keys should be the same type %T", rsaKey)
-	assertThat.IsTypef(result.public, rsaKey.Public(), "Private keys should be the same type %T", rsaKey.Public())
+	assertThat.IsTypef(result.public, pubFromKey, "Private keys should be the same type %T", pubFromKey)
 	assertThat.Equal(result.private.Size(), rsaKeySizeInBits/bitsInByte)
 }
 
@@ -55,7 +56,7 @@ func TestRsaWallet_Add(t *testing.T) {
 	result := NewRsaWallet(&mainId)
 	_ = result.Add(justPrivate)
 	assertThat.Len(result.keys, 2)
-	assertThat.True(result.keys[justPrivate.private.Public()].present)
+	assertThat.True(result.keys[key1.public].present)
 	//when - then
 	_ = result.Add(justPublic)
 	assertThat.Len(result.keys, 3)
