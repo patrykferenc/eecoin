@@ -4,12 +4,15 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 )
 
 var (
 	ErrPrivateKeyNotFound = errors.New("private key not found")
 	NoKeysFound           = errors.New("no keys found")
+	PemParseError         = errors.New("pem parse error")
 )
 
 const defaultRsaBitSize = 2048
@@ -58,4 +61,20 @@ func NewRsaWallet(mainId *Key[*rsa.PrivateKey, crypto.PublicKey]) *Rsa {
 	wallet := &Rsa{keys: make(map[crypto.PublicKey]privateKeyElement), mainId: mainId}
 	_ = wallet.Add(*mainId)
 	return wallet
+}
+
+func FromPem(pemData []byte) (Key[*rsa.PrivateKey, crypto.PublicKey], error) {
+	_, rest := pem.Decode(pemData)
+	if rest == nil {
+		return Key[*rsa.PrivateKey, crypto.PublicKey]{}, PemParseError
+	}
+	key, _ := x509.ParsePKCS1PublicKey(rest)
+	return Key[*rsa.PrivateKey, crypto.PublicKey]{public: key, algType: RSA}, nil
+
+}
+
+func ToPem(key Key[*rsa.PrivateKey, crypto.PublicKey]) []byte {
+	pub := key.private.Public().(*rsa.PublicKey)
+	block := x509.MarshalPKCS1PublicKey(pub)
+	return block
 }

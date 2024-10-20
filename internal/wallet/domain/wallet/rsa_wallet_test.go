@@ -90,3 +90,13 @@ func TestRsaWallet_SetMainIdentity(t *testing.T) {
 	assertThat.Equal(anotherId.private, result.mainId.private)
 
 }
+
+func TestToPem(t *testing.T) {
+	assertThat := assert.New(t)
+	mainId, _ := NewRsaKey()
+
+	resultToPem := ToPem(mainId)
+	resultFromPem, _ := FromPem(resultToPem)
+
+	assertThat.Equal(resultFromPem.public, mainId.public)
+}
