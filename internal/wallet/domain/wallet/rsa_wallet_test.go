@@ -95,8 +95,38 @@ func TestToPem(t *testing.T) {
 	assertThat := assert.New(t)
 	mainId, _ := NewRsaKey()
 
-	resultToPem := ToPem(mainId)
-	resultFromPem, _ := FromPem(resultToPem)
+	resultToPem := PublicToPem(mainId)
+	resultFromPem, _ := PublicFromPem(resultToPem)
+
+	resultPrivToPem := PrivateToPem(mainId)
+	resultPrivFromPem, _ := PrivateFromPem(resultPrivToPem)
 
 	assertThat.Equal(resultFromPem.public, mainId.public)
+	assertThat.Equal(resultPrivFromPem.private, mainId.private)
+}
+func TestSavingMainIdentity(t *testing.T) {
+	assertThat := assert.New(t)
+	//given
+	mainId, _ := NewRsaKey()
+	resultToPem := PrivateToPem(mainId)
+	pass := "dupa"
+	//when
+	saveError := SaveToDirectory("/tmp", "main.priv", resultToPem, &pass)
+	wallet, readError := ReadWalletFromDirectory("/tmp", &pass)
+	//then
+	assertThat.Nil(saveError)
+	assertThat.Nil(readError)
+	assertThat.NotNil(wallet)
+	assertThat.NotNil(wallet.keys)
+	assertThat.NotNil(wallet.mainId)
+	assertThat.Equal(mainId.private, wallet.mainId.private)
+}
+func TestEncryptDecrypt(t *testing.T) {
+
+	mainId, _ := NewRsaKey()
+	resultToPem := PrivateToPem(mainId)
+
+	encrypted := encrypt("dupa", resultToPem)
+	decrypted := decrypt("dupa", encrypted)
+	assert.Equal(t, resultToPem, decrypted)
 }
