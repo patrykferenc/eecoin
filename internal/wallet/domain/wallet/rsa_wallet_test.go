@@ -108,10 +108,18 @@ func TestSavingMainIdentity(t *testing.T) {
 	assertThat := assert.New(t)
 	//given
 	mainId, _ := NewRsaKey()
+	privOnly, _ := NewRsaKey()
+	pubOnly, _ := NewRsaKey()
+
 	resultToPem := PrivateToPem(mainId)
+	privPem := PrivateToPem(privOnly)
+	pubPem := PublicToPem(pubOnly)
 	pass := "dupa"
 	//when
 	saveError := SaveToDirectory("/tmp", "main.priv", resultToPem, &pass)
+	_ = SaveToDirectory("/tmp", "sobek.priv", privPem, &pass)
+	_ = SaveToDirectory("/tmp", "kloc.pub", pubPem, nil)
+
 	wallet, readError := ReadWalletFromDirectory("/tmp", &pass)
 	//then
 	assertThat.Nil(saveError)
@@ -120,4 +128,5 @@ func TestSavingMainIdentity(t *testing.T) {
 	assertThat.NotNil(wallet.keys)
 	assertThat.NotNil(wallet.mainId)
 	assertThat.Equal(mainId.private, wallet.mainId.private)
+	assertThat.Len(wallet.keys, 3)
 }

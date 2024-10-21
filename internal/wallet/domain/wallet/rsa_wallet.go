@@ -47,6 +47,7 @@ func (w *Rsa) Add(key Key[*rsa.PrivateKey, crypto.PublicKey]) error {
 		return nil
 	} else if key.public != nil {
 		w.keys[key.public] = privateKeyElement{key: nil, present: false}
+		return nil
 	}
 	return NoKeysFound
 }
@@ -81,6 +82,7 @@ func PublicFromPem(pemData []byte) (Key[*rsa.PrivateKey, crypto.PublicKey], erro
 	key, e := x509.ParsePKCS1PublicKey(rest)
 	if e != nil {
 		slog.Error(e.Error())
+		return Key[*rsa.PrivateKey, crypto.PublicKey]{}, PemParseError
 	}
 	return Key[*rsa.PrivateKey, crypto.PublicKey]{public: key, algType: RSA}, nil
 }
@@ -116,11 +118,8 @@ func ReadWalletFromDirectory(path string, passphrase *string) (*Rsa, error) {
 		for _, file := range directory {
 			slog.Info("Opened path", "path", file.Name())
 			if !file.IsDir() && strings.HasSuffix(file.Name(), ".pub") {
-
 				importPublicKey(absolutePath, file, wallet)
-
-			} else if !file.IsDir() && isTheMainIdentity(file) {
-
+			} else if !file.IsDir() && strings.HasSuffix(file.Name(), ".priv") {
 				importMainIdentityPrivateKey(absolutePath, file, passphrase, wallet)
 			}
 		}
@@ -155,8 +154,11 @@ func importMainIdentityPrivateKey(absolutePath string, file os.DirEntry, passphr
 	if passphrase != nil {
 		slog.Info("decrypting the main identity...")
 		unencrypted := Decrypt(*passphrase, mainId)
-		mainKey, _ := PrivateFromPem(unencrypted)
-		_ = wallet.SetMainIdentity(&mainKey)
+		privKey, _ := PrivateFromPem(unencrypted)
+		if isTheMainIdentity(file) {
+			_ = wallet.SetMainIdentity(&privKey)
+		}
+		_ = wallet.Add(privKey)
 	}
 }
 
