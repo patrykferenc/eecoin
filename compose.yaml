@@ -1,0 +1,40 @@
+services:
+  node-alfa:
+    image: "eecoin/node"
+    build: .
+    ports:
+      - "22137:22137"
+    volumes:
+      - "./example/default_peers:/etc/eecoin/peers"
+
+  node-beta:
+    image: "eecoin/node"
+    build: .
+    volumes:
+      - "./example/some_peers:/etc/eecoin/peers"
+
+  node-theta:
+    image: "eecoin/node"
+    build: .
+    volumes:
+      - "./example/some_peers:/etc/eecoin/peers"
+
+  node-delta:
+    image: "eecoin/node"
+    build: .
+    volumes:
+      - "./example/default_peers:/etc/eecoin/peers"
+
+  node-gamma:
+    image: "eecoin/node"
+    build: .
+    volumes:
+      - "./example/some_peers:/etc/eecoin/peers"
+
+  node-test:
+    image: "eecoin/node"
+    build: .
+    environment:
+      EECOIN_SAVE_PEERS: "true"
+    volumes:
+      - "./example/test_peers:/etc/eecoin/peers"
