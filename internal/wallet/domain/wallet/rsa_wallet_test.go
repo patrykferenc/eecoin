@@ -113,8 +113,8 @@ func TestSavingMainIdentity(t *testing.T) {
 
 	pass := "dupa"
 	w := NewRsaWallet(&mainId)
-	w.Add(privOnly)
-	w.Add(pubOnly)
+	_ = w.Add(privOnly)
+	_ = w.Add(pubOnly)
 	//when
 	saveError := w.ExportWallet("/tmp", &pass)
 

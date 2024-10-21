@@ -13,7 +13,7 @@ import (
 func Encrypt(passphrase string, plaintext []byte) []byte {
 	key, salt := deriveKey(passphrase, nil)
 	iv := make([]byte, 12)
-	rand.Read(iv)
+	_, _ = rand.Read(iv)
 	b, _ := aes.NewCipher(key)
 	aesgcm, _ := cipher.NewGCM(b)
 	data := aesgcm.Seal(nil, iv, plaintext, nil)
@@ -34,7 +34,7 @@ func Decrypt(passphrase string, ciphertext []byte) []byte {
 func deriveKey(passphrase string, salt []byte) ([]byte, []byte) {
 	if salt == nil {
 		salt = make([]byte, 8)
-		rand.Read(salt)
+		_, _ = rand.Read(salt)
 	}
 	return pbkdf2.Key([]byte(passphrase), salt, 1000, 32, sha256.New), salt
 }
