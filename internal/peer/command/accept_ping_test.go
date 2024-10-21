@@ -100,4 +100,6 @@ func (s *coordinatedPingSender) Ping(targetHost string) error {
 
 type noOpAcceptPingHandler struct{}
 
-func (h *noOpAcceptPingHandler) Handle(cmd command.AcceptPing) {}
+func (h *noOpAcceptPingHandler) Handle(cmd command.AcceptPing) error {
+	return nil
+}
