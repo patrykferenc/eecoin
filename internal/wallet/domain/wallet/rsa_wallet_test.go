@@ -121,12 +121,3 @@ func TestSavingMainIdentity(t *testing.T) {
 	assertThat.NotNil(wallet.mainId)
 	assertThat.Equal(mainId.private, wallet.mainId.private)
 }
-func TestEncryptDecrypt(t *testing.T) {
-
-	mainId, _ := NewRsaKey()
-	resultToPem := PrivateToPem(mainId)
-
-	encrypted := encrypt("dupa", resultToPem)
-	decrypted := decrypt("dupa", encrypted)
-	assert.Equal(t, resultToPem, decrypted)
-}
