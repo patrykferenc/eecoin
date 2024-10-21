@@ -36,6 +36,10 @@ func getPeersFile() (io.ReadCloser, error) {
 		}
 		slog.Warn("Peers file not found, creating a new one")
 		file, err = os.Create("/etc/eecoin/peers")
+		if err != nil {
+			slog.Error("Failed to create peers file", "error", err)
+			return nil, err
+		}
 	}
 
 	return file, nil

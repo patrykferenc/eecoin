@@ -65,6 +65,9 @@ func scheduleSave(peerComponent *peer.Component) {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		handler.Handle(command.SavePeersCommand{PathToFile: "/etc/eecoin/peers"})
+		err := handler.Handle(command.SavePeersCommand{PathToFile: "/etc/eecoin/peers"})
+		if err != nil {
+			slog.Error("Failed to save peers", "error", err)
+		}
 	}
 }
