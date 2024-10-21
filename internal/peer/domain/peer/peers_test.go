@@ -15,9 +15,9 @@ func TestPeersEmptyWhenCreated(t *testing.T) {
 func TestPeersNonEmpty(t *testing.T) {
 	// given
 	peers := []*Peer{
-		{Host: "localhost:8080", Status: StatusHealthy},
-		{Host: "localhost:8081", Status: StatusUnhealthy},
-		{Host: "192.168.21.37:8082", Status: StatusUnknown},
+		{Host: "http://localhost:8080", Status: StatusHealthy},
+		{Host: "http://localhost:8081", Status: StatusUnhealthy},
+		{Host: "http://192.168.21.37:8082", Status: StatusUnknown},
 	}
 
 	// when
@@ -29,9 +29,9 @@ func TestPeersNonEmpty(t *testing.T) {
 	}
 	// and then contains all peers
 	hosts := map[string]bool{
-		"localhost:8080":     false,
-		"localhost:8081":     false,
-		"192.168.21.37:8082": false,
+		"http://localhost:8080":     false,
+		"http://localhost:8081":     false,
+		"http://192.168.21.37:8082": false,
 	}
 	for _, peer := range actual.All() {
 		if _, ok := hosts[peer.Host]; !ok {
@@ -49,16 +49,16 @@ func TestPeersNonEmpty(t *testing.T) {
 	if len(actual.Healthy()) != 1 {
 		t.Errorf("Healthy peers should not be empty")
 	}
-	if healthy := actual.Healthy()[0]; healthy.Host != "localhost:8080" {
-		t.Errorf("Healthy peer should be localhost:8080, got %s", healthy.Host)
+	if healthy := actual.Healthy()[0]; healthy.Host != "http://localhost:8080" {
+		t.Errorf("Healthy peer should be http://localhost:8080, got %s", healthy.Host)
 	}
 }
 
 func TestPeersUpdates(t *testing.T) {
 	// given
 	peers := []*Peer{
-		{Host: "localhost:8080", Status: StatusHealthy},
-		{Host: "localhost:8081", Status: StatusUnhealthy},
+		{Host: "http://localhost:8080", Status: StatusHealthy},
+		{Host: "http://localhost:8081", Status: StatusUnhealthy},
 	}
 
 	// when
@@ -78,7 +78,7 @@ func TestPeersUpdates(t *testing.T) {
 	}
 
 	// and when
-	actual.UpdatePeerStatus("localhost:8080", StatusUnhealthy)
+	actual.UpdatePeerStatus("http://localhost:8080", StatusUnhealthy)
 
 	// then
 	if len(actual.Healthy()) != 0 {

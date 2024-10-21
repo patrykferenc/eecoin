@@ -22,7 +22,7 @@ func TestSendMessageHandeler_shouldWork(t *testing.T) {
 	repository := node.NewSimpleInFlightTransactionRepository()
 	seen := node.NewSimpleSeenTransactionRepository()
 	sender := &mockMessageSender{}
-	peersToReturn := node.Peers{"localhost:2137", "localhost:1234"}
+	peersToReturn := []string{"localhost:2137", "localhost:1234"}
 	peersRepo := &mockPeers{peers: peersToReturn, err: nil}
 	publisher := eventtest.NewMockedPublisher()
 
@@ -48,15 +48,15 @@ type mockMessageSender struct {
 	err error
 }
 
-func (m mockMessageSender) SendMessage(peers node.Peers, transaction *node.Transaction) error {
+func (m mockMessageSender) SendMessage(peers []string, transaction *node.Transaction) error {
 	return m.err
 }
 
 type mockPeers struct {
-	peers node.Peers
+	peers []string
 	err   error
 }
 
-func (m mockPeers) Get() (node.Peers, error) {
+func (m mockPeers) Get() ([]string, error) {
 	return m.peers, m.err
 }

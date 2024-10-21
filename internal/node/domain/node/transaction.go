@@ -8,11 +8,11 @@ import (
 )
 
 type Transaction struct {
-	ID        blockchain.TransactionID
-	Content   string
-	Timestamp time.Time
-	From      wallet.ID
-	To        wallet.ID
+	ID        blockchain.TransactionID `json:"id"`
+	Content   string                   `json:"content"`
+	Timestamp time.Time                `json:"timestamp"`
+	From      wallet.ID                `json:"from"`
+	To        wallet.ID                `json:"to"`
 }
 
 // InFlightTransactionRepository is a repository for transactions that are not yet included in a block.

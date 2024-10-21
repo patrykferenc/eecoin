@@ -30,3 +30,11 @@ docs/.eecoin.vpp.lck
 
 # binaries
 bin/
+
+docs/
+.git/
+.github/
+compose.yaml
+.md
+.vpp
+example/

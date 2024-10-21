@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	"github.com/patrykferenc/eecoin/internal/common/event"
@@ -69,7 +70,7 @@ func (h *sendMessageHandler) Handle(cmd SendMessage) error {
 		return fmt.Errorf("error when sending message: %w", err)
 	}
 
-	event, err := event.New(&node.MessageSentEvent{TransactionID: cmd.TransactionID}, "x.message.sent")
+	event, err := event.New(node.MessageSentEvent{TransactionID: cmd.TransactionID}, "x.message.sent")
 	if err != nil {
 		return fmt.Errorf("can not send message: %w", err)
 	}
@@ -78,6 +79,8 @@ func (h *sendMessageHandler) Handle(cmd SendMessage) error {
 	if err != nil {
 		return fmt.Errorf("can not send message: %w", err)
 	}
+
+	slog.Info("Message sent", "transactionID", cmd.TransactionID, "content", transaction.Content)
 
 	return nil
 }

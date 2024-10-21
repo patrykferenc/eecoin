@@ -1,4 +1,38 @@
 package http
 
-// TODO: Add code for controller /client/transction
-// Should invoke the accept client message command
+import (
+	"encoding/json"
+	"log/slog"
+	"net/http"
+
+	"github.com/patrykferenc/eecoin/internal/node/command"
+	"github.com/patrykferenc/eecoin/internal/node/domain/node"
+)
+
+func postClientMessage(acceptClientHandler command.AcceptClientMessageHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var transaction *node.Transaction
+
+		err := json.NewDecoder(r.Body).Decode(&transaction)
+		if err != nil {
+			slog.Warn("Failed to decode transaction", "error", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		cmd, err := command.NewAcceptClientMessage(transaction)
+		if err != nil {
+			slog.Warn("Failed to create command", "error", err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if err := acceptClientHandler.Handle(cmd); err != nil {
+			slog.Warn("Failed to handle command", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError) // TODO: better error handling
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
+}

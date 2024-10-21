@@ -3,9 +3,11 @@ package peer
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 )
 
+// TODO: Can be moved to a separate package in the future (or command/query?)
 func PeersFromFile(file io.Reader) (*Peers, error) {
 	buff := make([]byte, 1024)
 	n, err := file.Read(buff)
@@ -29,6 +31,7 @@ func PeersFromFile(file io.Reader) (*Peers, error) {
 }
 
 func PeersToFile(peers *Peers, file io.Writer) error {
+	slog.Info("Saving peers to file", "peers", peers.All())
 	for _, peer := range peers.All() {
 		_, err := fmt.Fprintln(file, peer.Host)
 		if err != nil {
