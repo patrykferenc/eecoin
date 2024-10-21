@@ -4,6 +4,7 @@ import (
 	"github.com/patrykferenc/eecoin/internal/common/event"
 	"github.com/patrykferenc/eecoin/internal/node/command"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
+	"github.com/patrykferenc/eecoin/internal/node/net/http"
 )
 
 type Component struct {
@@ -11,17 +12,17 @@ type Component struct {
 }
 
 type Commands struct {
-	sendMessage         command.SendMessageHandler
-	acceptClientMessage command.AcceptClientMessageHandler
-	acceptMessage       command.AcceptMessageHandler
-	persistMessage      command.PersistMessageHandler
+	SendMessage         command.SendMessageHandler
+	AcceptClientMessage command.AcceptClientMessageHandler
+	AcceptMessage       command.AcceptMessageHandler
+	PersistMessage      command.PersistMessageHandler
 }
 
-func NewComponent(publisher event.Publisher) (Component, error) {
+func NewComponent(publisher event.Publisher, peersRepo node.PeersRepository) (Component, error) {
 	repo := node.NewSimpleInFlightTransactionRepository()
 	seen := node.NewSimpleSeenTransactionRepository() // TODO: refactor when adding a real blockchain impl
-	noOpSender := node.NoOpMessageSender{}            // TODO: inject real sender
-	sendMessage, err := command.NewSendMessageHandler(repo, seen, &noOpSender, nil, publisher)
+	sender := http.NewSender()
+	sendMessage, err := command.NewSendMessageHandler(repo, seen, sender, peersRepo, publisher)
 	if err != nil {
 		return Component{}, err
 	}
@@ -43,10 +44,10 @@ func NewComponent(publisher event.Publisher) (Component, error) {
 
 	return Component{
 		Commands: Commands{
-			sendMessage:         sendMessage,
-			acceptClientMessage: acceptClientMessage,
-			acceptMessage:       acceptMessage,
-			persistMessage:      persistMessage,
+			SendMessage:         sendMessage,
+			AcceptClientMessage: acceptClientMessage,
+			AcceptMessage:       acceptMessage,
+			PersistMessage:      persistMessage,
 		},
 	}, nil
 }

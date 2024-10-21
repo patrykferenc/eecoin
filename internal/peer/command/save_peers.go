@@ -30,9 +30,12 @@ func (h *savePeersCommandHandler) Handle(cmd SavePeersCommand) error {
 		return nil
 	}
 
-	file, err := os.Open(cmd.PathToFile)
+	file, err := os.OpenFile(cmd.PathToFile, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
+	}
+	if err := file.Truncate(0); err != nil {
+		return fmt.Errorf("failed to truncate file before writing: %w", err)
 	}
 	defer file.Close()
 

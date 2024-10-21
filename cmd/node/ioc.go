@@ -5,11 +5,16 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/patrykferenc/eecoin/internal/common/event"
+	"github.com/patrykferenc/eecoin/internal/node"
 	"github.com/patrykferenc/eecoin/internal/peer"
 )
 
 type container struct {
+	nodeComponent *node.Component
 	peerComponent *peer.Component
+
+	broker *event.ChannelBroker
 }
 
 func newContainer() (*container, error) {
@@ -18,13 +23,23 @@ func newContainer() (*container, error) {
 		return nil, err
 	}
 
+	broker := event.NewChannelBroker()
+
 	peerComponent, err := peer.NewComponent(file)
+	if err != nil {
+		return nil, err
+	}
+
+	nodeComponent, err := node.NewComponent(broker, peerComponent.Queries.GetPeers)
 	if err != nil {
 		return nil, err
 	}
 
 	return &container{
 		peerComponent: &peerComponent,
+		nodeComponent: &nodeComponent,
+
+		broker: broker,
 	}, nil
 }
 
