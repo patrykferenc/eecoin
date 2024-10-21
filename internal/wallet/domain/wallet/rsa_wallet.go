@@ -8,6 +8,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/teris-io/shortid"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -15,7 +16,7 @@ import (
 )
 
 var (
-	ErrPrivateKeyNotFound = errors.New("private key not found")
+	ErrPrivateKeyNotFound = errors.New("private Key not found")
 	NoKeysFound           = errors.New("no keys found")
 	PemParseError         = errors.New("pem parse error")
 )
@@ -23,18 +24,18 @@ var (
 const defaultRsaBitSize = 2048
 
 type Rsa struct {
-	mainId *Key[*rsa.PrivateKey, crypto.PublicKey]
-	keys   map[crypto.PublicKey]privateKeyElement
+	MainId *Key[*rsa.PrivateKey, crypto.PublicKey]
+	Keys   map[crypto.PublicKey]KeyElement
 }
 
-type privateKeyElement struct {
-	key     *rsa.PrivateKey
-	present bool
+type KeyElement struct {
+	Key     *rsa.PrivateKey
+	Present bool
 }
 
 func (w *Rsa) SetMainIdentity(key *Key[*rsa.PrivateKey, crypto.PublicKey]) error {
 	if key.private != nil {
-		w.mainId = &Key[*rsa.PrivateKey, crypto.PublicKey]{private: key.private, public: key.private.PublicKey, algType: RSA}
+		w.MainId = &Key[*rsa.PrivateKey, crypto.PublicKey]{private: key.private, Public: key.private.PublicKey, algType: RSA}
 		return nil
 	}
 	return ErrPrivateKeyNotFound
@@ -43,10 +44,12 @@ func (w *Rsa) SetMainIdentity(key *Key[*rsa.PrivateKey, crypto.PublicKey]) error
 func (w *Rsa) Add(key Key[*rsa.PrivateKey, crypto.PublicKey]) error {
 	if key.private != nil {
 		pub := key.private.Public()
-		w.keys[pub] = privateKeyElement{key: key.private, present: true}
+		w.Keys[pub] = KeyElement{Key: key.private, Present: true}
+		slog.Info("private-Public Key added to wallet", "pub", pub)
 		return nil
-	} else if key.public != nil {
-		w.keys[key.public] = privateKeyElement{key: nil, present: false}
+	} else if key.Public != nil {
+		w.Keys[key.Public] = KeyElement{Key: nil, Present: false}
+		slog.Info("Public Key added to wallet", "pub", key.Public)
 		return nil
 	}
 	return NoKeysFound
@@ -60,17 +63,17 @@ func NewRsaKey() (Key[*rsa.PrivateKey, crypto.PublicKey], error) {
 	if err != nil {
 		return Key[*rsa.PrivateKey, crypto.PublicKey]{algType: RSA}, nil
 	}
-	return Key[*rsa.PrivateKey, crypto.PublicKey]{private: key, public: key.Public(), algType: RSA}, nil
+	return Key[*rsa.PrivateKey, crypto.PublicKey]{private: key, Public: key.Public(), algType: RSA}, nil
 }
 
 func NewRsaWallet(mainId *Key[*rsa.PrivateKey, crypto.PublicKey]) *Rsa {
-	wallet := &Rsa{keys: make(map[crypto.PublicKey]privateKeyElement), mainId: mainId}
+	wallet := &Rsa{Keys: make(map[crypto.PublicKey]KeyElement), MainId: mainId}
 	_ = wallet.Add(*mainId)
 	return wallet
 }
 
 func newRsaWalletWithoutId() *Rsa {
-	wallet := &Rsa{keys: make(map[crypto.PublicKey]privateKeyElement)}
+	wallet := &Rsa{Keys: make(map[crypto.PublicKey]KeyElement)}
 	return wallet
 }
 
@@ -84,7 +87,7 @@ func PublicFromPem(pemData []byte) (Key[*rsa.PrivateKey, crypto.PublicKey], erro
 		slog.Error(e.Error())
 		return Key[*rsa.PrivateKey, crypto.PublicKey]{}, PemParseError
 	}
-	return Key[*rsa.PrivateKey, crypto.PublicKey]{public: key, algType: RSA}, nil
+	return Key[*rsa.PrivateKey, crypto.PublicKey]{Public: key, algType: RSA}, nil
 }
 
 func PrivateFromPem(pemData []byte) (Key[*rsa.PrivateKey, crypto.PublicKey], error) {
@@ -93,7 +96,7 @@ func PrivateFromPem(pemData []byte) (Key[*rsa.PrivateKey, crypto.PublicKey], err
 		return Key[*rsa.PrivateKey, crypto.PublicKey]{}, PemParseError
 	}
 	key, _ := x509.ParsePKCS1PrivateKey(rest)
-	return Key[*rsa.PrivateKey, crypto.PublicKey]{private: key, public: key.Public(), algType: RSA}, nil
+	return Key[*rsa.PrivateKey, crypto.PublicKey]{private: key, Public: key.Public(), algType: RSA}, nil
 }
 
 func PrivateToPem(key Key[*rsa.PrivateKey, crypto.PublicKey]) []byte {
@@ -103,7 +106,7 @@ func PrivateToPem(key Key[*rsa.PrivateKey, crypto.PublicKey]) []byte {
 }
 
 func PublicToPem(key Key[*rsa.PrivateKey, crypto.PublicKey]) []byte {
-	pub := key.public.(*rsa.PublicKey)
+	pub := key.Public.(*rsa.PublicKey)
 	block := x509.MarshalPKCS1PublicKey(pub)
 	return block
 }
@@ -116,10 +119,11 @@ func ReadWalletFromDirectory(path string, passphrase *string) (*Rsa, error) {
 
 	if err == nil {
 		for _, file := range directory {
-			slog.Info("Opened path", "path", file.Name())
 			if !file.IsDir() && strings.HasSuffix(file.Name(), ".pub") {
+				slog.Info("Opened path", "path", file.Name())
 				importPublicKey(absolutePath, file, wallet)
 			} else if !file.IsDir() && strings.HasSuffix(file.Name(), ".priv") {
+				slog.Info("Opened path", "path", file.Name())
 				importMainIdentityPrivateKey(absolutePath, file, passphrase, wallet)
 			}
 		}
@@ -127,6 +131,30 @@ func ReadWalletFromDirectory(path string, passphrase *string) (*Rsa, error) {
 	}
 
 	return nil, err
+}
+
+func (w *Rsa) ExportWallet(path string, globalPassphrase *string) error {
+	mainId := *w.MainId
+	mainIdPem := PrivateToPem(mainId)
+	_ = SaveToDirectory(path, "main.priv", mainIdPem, globalPassphrase)
+	slog.Info("Exported main identity Key", "path", filepath.Join(path, "main.priv"))
+
+	for pub, priv := range w.Keys {
+		if priv.Present && priv.Key != mainId.private {
+			key := Key[*rsa.PrivateKey, crypto.PublicKey]{private: priv.Key, algType: RSA}
+			pemFromPriv := PrivateToPem(key)
+			id, _ := shortid.Generate()
+			_ = SaveToDirectory(path, id+".priv", pemFromPriv, globalPassphrase)
+			slog.Info("Exported private Key", "path", filepath.Join(path, id+".priv"))
+		} else if priv.Key != mainId.private {
+			key := Key[*rsa.PrivateKey, crypto.PublicKey]{Public: pub, algType: RSA}
+			pemFromPub := PublicToPem(key)
+			id, _ := shortid.Generate()
+			_ = SaveToDirectory(path, id+".pub", pemFromPub, nil)
+			slog.Info("Exported Public Key", "path", filepath.Join(path, id+".pub"))
+		}
+	}
+	return nil
 }
 
 func SaveToDirectory(path string, name string, pem []byte, passphrase *string) error {
