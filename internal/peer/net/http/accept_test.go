@@ -12,13 +12,12 @@ import (
 func TestAcceptPingController(t *testing.T) {
 	// given
 	acceptPingHandler := &noOpAcceptPingHandler{}
-	pingController := NewPingController(acceptPingHandler)
 
 	req := httptest.NewRequest(http.MethodGet, "/ping", nil)
 	w := httptest.NewRecorder()
 
 	// when
-	pingController.GetPing(w, req)
+	getPing(acceptPingHandler)(w, req)
 
 	// then
 	assert.Equal(t, http.StatusOK, w.Code)

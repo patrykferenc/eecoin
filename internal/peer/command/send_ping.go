@@ -36,10 +36,10 @@ func (h *sendPingHandler) Handle(cmd SendPingCommand) {
 	for _, p := range allPeers {
 		err := h.sender.Ping(p.Host)
 		if err != nil {
-			slog.Debug("Ping to failed, marking as unhealthy", "host", p.Host, "err", err)
+			slog.Info("Ping to failed, marking as unhealthy", "host", p.Host, "err", err)
 			peers.UpdatePeerStatus(p.Host, peer.StatusUnhealthy)
 		} else {
-			slog.Debug("Ping to succeeded, marking as healthy", "host", p.Host)
+			slog.Info("Ping to succeeded, marking as healthy", "host", p.Host)
 			peers.UpdatePeerStatus(p.Host, peer.StatusHealthy)
 		}
 	}

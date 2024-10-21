@@ -3,6 +3,7 @@ package http
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/patrykferenc/eecoin/internal/peer/command"
 )
@@ -12,6 +13,15 @@ const pingPath = "/ping"
 type PingClient struct {
 	acceptPingHandler command.AcceptPingHandler
 	client            http.Client
+}
+
+func NewPingClient(acceptPingHandler command.AcceptPingHandler) *PingClient {
+	return &PingClient{
+		acceptPingHandler: acceptPingHandler,
+		client: http.Client{
+			Timeout: 5 * time.Second,
+		},
+	}
 }
 
 func (p *PingClient) Ping(targetHost string) error {

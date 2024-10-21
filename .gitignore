@@ -27,3 +27,6 @@ go.work.sum
 # VPP
 docs/*.bak*
 docs/.eecoin.vpp.lck
+
+# binaries
+bin/

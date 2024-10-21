@@ -93,7 +93,10 @@ func (s *coordinatedPingSender) Ping(targetHost string) error {
 		panic("unexpected host: stopping test")
 	}
 	if shouldErr == nil {
-		handler.Handle(command.AcceptPing{Host: s.sourceHost})
+		err := handler.Handle(command.AcceptPing{Host: s.sourceHost})
+		if err != nil {
+			return err
+		}
 	}
 	return shouldErr
 }
