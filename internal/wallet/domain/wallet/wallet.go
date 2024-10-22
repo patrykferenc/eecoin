@@ -16,6 +16,6 @@ type Wallet[T any, E any] interface {
 
 type Key[T any, E any] struct {
 	private T
-	public  E
+	Public  E
 	algType Algorithm
 }

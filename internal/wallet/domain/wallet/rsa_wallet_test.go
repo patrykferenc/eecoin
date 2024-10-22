@@ -23,8 +23,8 @@ func TestGenerateRsaKey(t *testing.T) {
 	//then
 	assertThat.NotNil(result)
 	assertThat.Nil(err)
-	assertThat.IsTypef(result.private, rsaKey, "Private keys should be the same type %T", rsaKey)
-	assertThat.IsTypef(result.public, pubFromKey, "Private keys should be the same type %T", pubFromKey)
+	assertThat.IsTypef(result.private, rsaKey, "Private Keys should be the same type %T", rsaKey)
+	assertThat.IsTypef(result.Public, pubFromKey, "Private Keys should be the same type %T", pubFromKey)
 	assertThat.Equal(result.private.Size(), rsaKeySizeInBits/bitsInByte)
 }
 
@@ -37,8 +37,8 @@ func TestNewRsaWallet(t *testing.T) {
 	result := NewRsaWallet(&mainId)
 	//then
 	assertThat.NotNil(result)
-	assertThat.Equal(&mainId, result.mainId)
-	assertThat.NotNil(result.keys)
+	assertThat.Equal(&mainId, result.MainId)
+	assertThat.NotNil(result.Keys)
 }
 
 func TestRsaWallet_Add(t *testing.T) {
@@ -50,20 +50,20 @@ func TestRsaWallet_Add(t *testing.T) {
 	key2, _ := NewRsaKey()
 
 	justPrivate := Key[*rsa.PrivateKey, crypto.PublicKey]{private: key1.private, algType: RSA}
-	justPublic := Key[*rsa.PrivateKey, crypto.PublicKey]{public: key2.public, algType: RSA}
+	justPublic := Key[*rsa.PrivateKey, crypto.PublicKey]{Public: key2.Public, algType: RSA}
 	allNil := Key[*rsa.PrivateKey, crypto.PublicKey]{algType: RSA}
 	//when - then
 	result := NewRsaWallet(&mainId)
 	_ = result.Add(justPrivate)
-	assertThat.Len(result.keys, 2)
-	assertThat.True(result.keys[key1.public].present)
+	assertThat.Len(result.Keys, 2)
+	assertThat.True(result.Keys[key1.Public].Present)
 	//when - then
 	_ = result.Add(justPublic)
-	assertThat.Len(result.keys, 3)
-	assertThat.False(result.keys[justPublic.public].present)
+	assertThat.Len(result.Keys, 3)
+	assertThat.False(result.Keys[justPublic.Public].Present)
 	//when - then
 	err := result.Add(allNil)
-	assertThat.Len(result.keys, 3)
+	assertThat.Len(result.Keys, 3)
 	assertThat.ErrorIs(err, NoKeysFound)
 
 }
@@ -87,6 +87,44 @@ func TestRsaWallet_SetMainIdentity(t *testing.T) {
 	result := NewRsaWallet(&mainId)
 	//then
 	_ = result.SetMainIdentity(&anotherId)
-	assertThat.Equal(anotherId.private, result.mainId.private)
+	assertThat.Equal(anotherId.private, result.MainId.private)
 
+}
+
+func TestToPem(t *testing.T) {
+	assertThat := assert.New(t)
+	mainId, _ := NewRsaKey()
+
+	resultToPem := PublicToPem(mainId)
+	resultFromPem, _ := PublicFromPem(resultToPem)
+
+	resultPrivToPem := PrivateToPem(mainId)
+	resultPrivFromPem, _ := PrivateFromPem(resultPrivToPem)
+
+	assertThat.Equal(resultFromPem.Public, mainId.Public)
+	assertThat.Equal(resultPrivFromPem.private, mainId.private)
+}
+func TestSavingMainIdentity(t *testing.T) {
+	assertThat := assert.New(t)
+	//given
+	mainId, _ := NewRsaKey()
+	privOnly, _ := NewRsaKey()
+	pubOnly, _ := NewRsaKey()
+
+	pass := "dupa"
+	w := NewRsaWallet(&mainId)
+	_ = w.Add(privOnly)
+	_ = w.Add(pubOnly)
+	//when
+	saveError := w.ExportWallet("/tmp", &pass)
+
+	wallet, readError := ReadWalletFromDirectory("/tmp", &pass)
+	//then
+	assertThat.Nil(saveError)
+	assertThat.Nil(readError)
+	assertThat.NotNil(wallet)
+	assertThat.NotNil(wallet.Keys)
+	assertThat.NotNil(wallet.MainId)
+	assertThat.Equal(mainId.private, wallet.MainId.private)
+	assertThat.Len(wallet.Keys, 3)
 }
