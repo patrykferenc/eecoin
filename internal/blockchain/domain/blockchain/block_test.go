@@ -81,7 +81,7 @@ func TestNewBlockWithAddBlock(t *testing.T) {
 	assertThat.Equal(errInvalidIdx, BlockNotFound)
 
 	_ = chain.AddBlock(newBlock)
-	expectedActualBlock, errInvalidIdx := chain.GetBlock(1)
+	expectedActualBlock, _ := chain.GetBlock(1)
 	assertThat.Equal(newBlock, chain.GetLast())
 	assertThat.Equal(newBlock, expectedActualBlock)
 	assertThat.NotEqual(newBlock, chain.GetFirst())
