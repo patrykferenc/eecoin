@@ -1,6 +1,6 @@
 module github.com/patrykferenc/eecoin
 
-go 1.21.1
+go 1.21.13
 
 require (
 	github.com/go-chi/chi/v5 v5.1.0
