@@ -1,6 +1,6 @@
 module github.com/patrykferenc/eecoin
 
-go 1.21.13
+go 1.23.2
 
 require (
 	github.com/go-chi/chi/v5 v5.1.0
@@ -9,7 +9,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	github.com/urfave/cli/v2 v2.27.5
-	golang.org/x/crypto v0.28.0
+	golang.org/x/crypto v0.29.0
 )
 
 require (
