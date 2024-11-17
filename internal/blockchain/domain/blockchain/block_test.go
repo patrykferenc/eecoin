@@ -1,4 +1,4 @@
-package node
+package blockchain
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -15,13 +15,14 @@ func TestImportBlock(t *testing.T) {
 		time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
 		2137,
 		2136,
-		make([]Transaction, 0),
+		make([]TransactionID, 0),
+		Challenge{},
 	}
 	genesisBlock := GenerateGenesisBlock()
 
 	//when
-	nonGenesisChain, errorWhichShouldBePresent := ImportBlockain([]Block{nonGenesisBlock})
-	genesisChain, errorWhichShouldNotBePresent := ImportBlockain([]Block{genesisBlock})
+	nonGenesisChain, errorWhichShouldBePresent := ImportBlockchain([]Block{nonGenesisBlock})
+	genesisChain, errorWhichShouldNotBePresent := ImportBlockchain([]Block{genesisBlock})
 
 	//then
 	assertThat.Nil(nonGenesisChain)
@@ -37,9 +38,9 @@ func TestNewBlockWithAddBlock(t *testing.T) {
 
 	//given
 	timestamp := time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli()
-	transactions := make([]Transaction, 0)
+	transactions := make([]TransactionID, 0)
 	genesisBlock := GenerateGenesisBlock()
-	chain, _ := ImportBlockain([]Block{genesisBlock})
+	chain, _ := ImportBlockchain([]Block{genesisBlock})
 
 	//when - then
 
@@ -48,7 +49,8 @@ func TestNewBlockWithAddBlock(t *testing.T) {
 		time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
 		2137,
 		genesisBlock.ContentHash,
-		make([]Transaction, 0),
+		make([]TransactionID, 0),
+		Challenge{},
 	}
 
 	invalidPrevHashBlock := Block{
@@ -56,7 +58,8 @@ func TestNewBlockWithAddBlock(t *testing.T) {
 		time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
 		2137,
 		2136,
-		make([]Transaction, 0),
+		make([]TransactionID, 0),
+		Challenge{},
 	}
 
 	newBlock, errorShouldNotBePresent := chain.NewBlock(timestamp, transactions)

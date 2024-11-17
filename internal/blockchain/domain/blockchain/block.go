@@ -1,4 +1,4 @@
-package node
+package blockchain
 
 import (
 	"errors"
@@ -19,14 +19,15 @@ type Block struct {
 	TimestampMilis int64
 	ContentHash    uint64
 	PrevHash       uint64
-	Transactions   []Transaction
+	Transactions   []TransactionID
+	Challenge      Challenge
 }
 
 type BlockChain struct {
 	blocks []Block
 }
 
-func (chain *BlockChain) NewBlock(timestamp int64, transactions []Transaction) (Block, error) {
+func (chain *BlockChain) NewBlock(timestamp int64, transactions []TransactionID) (Block, error) {
 	previousHash := chain.blocks[len(chain.blocks)-1].ContentHash
 	blockWithoutHash := &Block{
 		Index:          len(chain.blocks),
@@ -77,7 +78,7 @@ func (chain *BlockChain) GetBlockByHash(hash uint64) (Block, error) {
 	return Block{}, BlockNotFound
 }
 
-func ImportBlockain(blocks []Block) (*BlockChain, error) {
+func ImportBlockchain(blocks []Block) (*BlockChain, error) {
 	if len(blocks) == 0 || !isValidGenesis(blocks[0]) {
 		return nil, ChainNotValid
 	}
@@ -95,7 +96,7 @@ func GenerateGenesisBlock() Block {
 	genesisBlock := &Block{
 		Index:          0,
 		TimestampMilis: GenesisBlockTimestamp,
-		Transactions:   []Transaction{},
+		Transactions:   []TransactionID{},
 	}
 	contentHash, _ := CalculateHash(*genesisBlock)
 	genesisBlock.ContentHash = contentHash
