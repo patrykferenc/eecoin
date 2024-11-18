@@ -117,20 +117,20 @@ func ReadWalletFromDirectory(path string, passphrase *string) (*Rsa, error) {
 	directory, err := os.ReadDir(absolutePath)
 	wallet := newRsaWalletWithoutId()
 
-	if err == nil {
-		for _, file := range directory {
-			if !file.IsDir() && strings.HasSuffix(file.Name(), ".pub") {
-				slog.Info("Opened path", "path", file.Name())
-				importPublicKey(absolutePath, file, wallet)
-			} else if !file.IsDir() && strings.HasSuffix(file.Name(), ".priv") {
-				slog.Info("Opened path", "path", file.Name())
-				importMainIdentityPrivateKey(absolutePath, file, passphrase, wallet)
-			}
-		}
-		return wallet, nil
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, err
+	for _, file := range directory {
+		if !file.IsDir() && strings.HasSuffix(file.Name(), ".pub") {
+			slog.Info("Opened path", "path", file.Name())
+			importPublicKey(absolutePath, file, wallet)
+		} else if !file.IsDir() && strings.HasSuffix(file.Name(), ".priv") {
+			slog.Info("Opened path", "path", file.Name())
+			importPrivateKey(absolutePath, file, passphrase, wallet)
+		}
+	}
+	return wallet, nil
 }
 
 func (w *Rsa) ExportWallet(path string, globalPassphrase *string) error {
@@ -176,7 +176,7 @@ func isTheMainIdentity(file os.DirEntry) bool {
 	return strings.TrimSpace(file.Name()) == "main.priv"
 }
 
-func importMainIdentityPrivateKey(absolutePath string, file os.DirEntry, passphrase *string, wallet *Rsa) {
+func importPrivateKey(absolutePath string, file os.DirEntry, passphrase *string, wallet *Rsa) {
 	mainId, _ := os.ReadFile(filepath.Join(absolutePath, file.Name()))
 	slog.Info("Reading main identity", "filepath", filepath.Join(absolutePath, file.Name()))
 	if passphrase != nil {

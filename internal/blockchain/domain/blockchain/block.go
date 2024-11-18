@@ -2,9 +2,10 @@ package blockchain
 
 import (
 	"errors"
-	"github.com/mitchellh/hashstructure/v2"
 	"math"
 	"time"
+
+	"github.com/mitchellh/hashstructure/v2"
 )
 
 var (
@@ -50,10 +51,12 @@ func (chain *BlockChain) AddBlock(block Block) error {
 	}
 	return BlockNotValid
 }
+
 func (chain *BlockChain) RemoveBlocksStartingWithIndex(index int) {
 	shortenedChain := chain.blocks[:len(chain.blocks)-index]
 	chain.blocks = shortenedChain
 }
+
 func (chain *BlockChain) GetBlock(index int) (Block, error) {
 	if index >= len(chain.blocks) || index < 0 {
 		return Block{}, BlockNotFound
@@ -102,6 +105,7 @@ func GenerateGenesisBlock() Block {
 	genesisBlock.ContentHash = contentHash
 	return *genesisBlock
 }
+
 func CalculateHash(block Block) (uint64, error) {
 	blockWithoutHash := Block{
 		Index:          block.Index,
