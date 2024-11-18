@@ -4,9 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/patrykferenc/eecoin/internal/common/event"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
 )
@@ -60,7 +58,11 @@ func (h *acceptClientMessageHandler) Handle(cmd AcceptClientMessage) error {
 		return fmt.Errorf("can not accept message: failed to save transaction: %w", err)
 	}
 
-	event := node.SendMessageEvent{TransactionID: cmd.Transaction().ID, RroutingKey: "x.message.send", Id: uuid.New().String(), Tiimestamp: time.Now()}
+	data := node.SendMessageEvent{TransactionID: cmd.Transaction().ID}
+	event, err := event.New(data, "x.message.send")
+	if err != nil {
+		return fmt.Errorf("can not accept message: failed to create event: %w", err)
+	}
 	if err := h.publisher.Publish(event); err != nil {
 		return fmt.Errorf("can not accept message: failed to publish event: %w", err)
 	}

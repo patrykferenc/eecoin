@@ -66,7 +66,7 @@ func (h *sendMessageHandler) Handle(cmd SendMessage) error {
 	}
 
 	err = h.sender.SendMessage(peers, transaction)
-	if err != nil {
+	if err != nil && err != node.ErrSomePeersFailed {
 		return fmt.Errorf("error when sending message: %w", err)
 	}
 

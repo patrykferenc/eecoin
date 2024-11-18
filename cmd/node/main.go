@@ -3,11 +3,13 @@ package main
 import (
 	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/patrykferenc/eecoin/internal/common/config"
+	"github.com/patrykferenc/eecoin/internal/common/event"
 	nodecntr "github.com/patrykferenc/eecoin/internal/node"
 	"github.com/patrykferenc/eecoin/internal/node/command"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
@@ -20,18 +22,16 @@ import (
 func main() {
 	slog.Info("Starting Eecoin node")
 
-	cfg, err := config.Read("/etc/eecoin/config.yml")
+	cfg, err := readConfig()
 	if err != nil {
 		slog.Error("Failed to read config", "error", err)
 		return
 	}
 
-	level, err := cfg.Log.LevelIfSet()
-	if err != nil {
-		slog.Error("Failed to parse log level", "error", err)
+	if err := setLoggerLevel(cfg); err != nil {
+		slog.Error("Failed to set logger level", "error", err)
 		return
 	}
-	slog.SetLogLoggerLevel(level)
 
 	container, err := NewContainer(cfg)
 	if err != nil {
@@ -49,6 +49,24 @@ func main() {
 		slog.Error("Failed to start HTTP server", "error", err)
 		return
 	}
+}
+
+func readConfig() (*config.Config, error) {
+	configPath := "/etc/eecoin/config.yaml"
+	if os.Getenv("EECOIN_CONFIG") != "" {
+		configPath = os.Getenv("EECOIN_CONFIG")
+	}
+
+	return config.Read(configPath)
+}
+
+func setLoggerLevel(cfg *config.Config) error {
+	level, err := cfg.Log.LevelIfSet()
+	if err != nil {
+		return err
+	}
+	slog.SetLogLoggerLevel(level)
+	return nil
 }
 
 func listenAndServe(peerComponent *peercntr.Component, nodeComponent *nodecntr.Component) error {
@@ -90,25 +108,42 @@ func scheduleSave(cfg *config.Config, peerComponent *peercntr.Component) {
 }
 
 func pubSub(cntr *Container) {
-	// sentMsgs := cntr.broker.Subscribe("x.message.sent") // TODO: We will implement it later, to discard msgs
-	sendMsgs := cntr.broker.Subscribe("x.message.send")
-
-	for sendMsg := range sendMsgs {
-		msg, ok := sendMsg.(node.SendMessageEvent)
-		if !ok {
-			slog.Error("Failed to cast message to SendMessageEvent")
-			continue
-		}
-		cmd, err := command.NewSendMessage(msg.TransactionID)
-		if err != nil {
-			slog.Error("Failed to create SendMessage command", "error", err)
-			continue
-		}
-		err = cntr.nodeComponent.Commands.SendMessage.Handle(cmd)
-		if err != nil {
-			slog.Error("Failed to handle SendMessage command", "error", err)
-		}
+	handlers := map[string]func(event.Event) error{
+		"x.message.send": func(e event.Event) error {
+			data, ok := e.Data().(node.SendMessageEvent)
+			if !ok {
+				slog.Error("Invalid event data")
+				return nil
+			}
+			cmd, err := command.NewSendMessage(data.TransactionID)
+			if err != nil {
+				slog.Error("Failed to create SendMessage command", "error", err)
+				return nil
+			}
+			err = cntr.nodeComponent.Commands.SendMessage.Handle(cmd)
+			if err != nil {
+				slog.Error("Failed to handle SendMessage command", "error", err)
+			}
+			return nil
+		},
+		"x.message.sent": func(e event.Event) error {
+			data, ok := e.Data().(node.MessageSentEvent)
+			if !ok {
+				slog.Error("Invalid event data")
+				return nil
+			}
+			cmd, err := command.NewPersistMessage(data.TransactionID)
+			if err != nil {
+				slog.Error("Failed to create PersistMessage command", "error", err)
+				return nil
+			}
+			err = cntr.nodeComponent.Commands.PersistMessage.Handle(cmd)
+			if err != nil {
+				slog.Error("Failed to handle PersistMessage command", "error", err)
+			}
+			return nil
+		},
 	}
 
-	slog.Info("PubSub finished")
+	cntr.broker.RouteAll(handlers)
 }

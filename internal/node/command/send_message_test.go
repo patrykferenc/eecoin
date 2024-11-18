@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/patrykferenc/eecoin/internal/common/event/eventtest"
+	"github.com/patrykferenc/eecoin/internal/common/mock"
 	"github.com/patrykferenc/eecoin/internal/node/command"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
 	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
@@ -21,9 +22,9 @@ func TestSendMessageHandeler_shouldWork(t *testing.T) {
 	// given
 	repository := node.NewSimpleInFlightTransactionRepository()
 	seen := node.NewSimpleSeenTransactionRepository()
-	sender := &mockMessageSender{}
+	sender := mock.MessageSender{}
 	peersToReturn := []string{"localhost:2137", "localhost:1234"}
-	peersRepo := &mockPeers{peers: peersToReturn, err: nil}
+	peersRepo := mock.Peers{Peers: peersToReturn}
 	publisher := eventtest.NewMockedPublisher()
 
 	// and given
@@ -42,21 +43,4 @@ func TestSendMessageHandeler_shouldWork(t *testing.T) {
 
 	// and then
 	assert.Len(t, publisher.Published(), 1)
-}
-
-type mockMessageSender struct {
-	err error
-}
-
-func (m mockMessageSender) SendMessage(peers []string, transaction *node.Transaction) error {
-	return m.err
-}
-
-type mockPeers struct {
-	peers []string
-	err   error
-}
-
-func (m mockPeers) Get() ([]string, error) {
-	return m.peers, m.err
 }

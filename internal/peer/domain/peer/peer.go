@@ -23,7 +23,7 @@ func (s Status) String() string {
 }
 
 type Peer struct {
-	Host   string
+	Host   string // Host is the IP address of the peer //TODO: We can use net.IP or encapsulate it
 	Status Status
 }
 

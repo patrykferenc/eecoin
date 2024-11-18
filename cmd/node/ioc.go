@@ -9,6 +9,8 @@ import (
 	"github.com/patrykferenc/eecoin/internal/common/config"
 	"github.com/patrykferenc/eecoin/internal/common/event"
 	"github.com/patrykferenc/eecoin/internal/node"
+	nodedomain "github.com/patrykferenc/eecoin/internal/node/domain/node"
+	nodehttp "github.com/patrykferenc/eecoin/internal/node/net/http"
 	"github.com/patrykferenc/eecoin/internal/peer"
 )
 
@@ -37,7 +39,9 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 		return nil, err
 	}
 
-	nodeComponent, err := node.NewComponent(broker, peerComponent.Queries.GetPeers, seenRepo)
+	inflightRepo := nodedomain.NewSimpleInFlightTransactionRepository()
+	sender := nodehttp.NewSender()
+	nodeComponent, err := node.NewComponent(broker, peerComponent.Queries.GetPeers, seenRepo, inflightRepo, sender)
 	if err != nil {
 		return nil, err
 	}

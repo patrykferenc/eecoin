@@ -4,7 +4,6 @@ import (
 	"github.com/patrykferenc/eecoin/internal/common/event"
 	"github.com/patrykferenc/eecoin/internal/node/command"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
-	"github.com/patrykferenc/eecoin/internal/node/net/http"
 )
 
 type Component struct {
@@ -18,9 +17,13 @@ type Commands struct {
 	PersistMessage      command.PersistMessageHandler
 }
 
-func NewComponent(publisher event.Publisher, peersRepo node.PeersRepository, seen node.SeenTransactionRepository) (Component, error) {
-	repo := node.NewSimpleInFlightTransactionRepository()
-	sender := http.NewSender()
+func NewComponent(
+	publisher event.Publisher,
+	peersRepo node.PeersRepository,
+	seen node.SeenTransactionRepository,
+	repo node.InFlightTransactionRepository,
+	sender node.MessageSender,
+) (Component, error) {
 	sendMessage, err := command.NewSendMessageHandler(repo, seen, sender, peersRepo, publisher)
 	if err != nil {
 		return Component{}, err
