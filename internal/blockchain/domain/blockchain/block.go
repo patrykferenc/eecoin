@@ -81,6 +81,17 @@ func (chain *BlockChain) GetBlockByHash(hash uint64) (Block, error) {
 	return Block{}, BlockNotFound
 }
 
+func (chain *BlockChain) GetBlockByTransactionID(id TransactionID) (Block, error) {
+	for _, block := range chain.blocks {
+		for _, transaction := range block.Transactions {
+			if transaction == id {
+				return block, nil
+			}
+		}
+	}
+	return Block{}, BlockNotFound
+}
+
 func ImportBlockchain(blocks []Block) (*BlockChain, error) {
 	if len(blocks) == 0 || !isValidGenesis(blocks[0]) {
 		return nil, ChainNotValid

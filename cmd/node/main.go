@@ -3,11 +3,11 @@ package main
 import (
 	"log/slog"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/patrykferenc/eecoin/internal/common/config"
 	nodecntr "github.com/patrykferenc/eecoin/internal/node"
 	"github.com/patrykferenc/eecoin/internal/node/command"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
@@ -18,21 +18,30 @@ import (
 )
 
 func main() {
-	slog.Info("Starting Eecoin node...")
+	slog.Info("Starting Eecoin node")
 
-	container, err := newContainer()
+	cfg, err := config.Read("/etc/eecoin/config.yml")
+	if err != nil {
+		slog.Error("Failed to read config", "error", err)
+		return
+	}
+
+	level, err := cfg.Log.LevelIfSet()
+	if err != nil {
+		slog.Error("Failed to parse log level", "error", err)
+		return
+	}
+	slog.SetLogLoggerLevel(level)
+
+	container, err := NewContainer(cfg)
 	if err != nil {
 		slog.Error("Failed to create container", "error", err)
 		return
 	}
-	slog.Info("Context started...")
+	slog.Info("Context constructed")
 
-	if os.Getenv("EECOIN_SAVE_PEERS") != "" {
-		slog.Info("Will be saving peers to file")
-		go scheduleSave(container.peerComponent)
-	}
-
-	go schedulePing(container.peerComponent)
+	go scheduleSave(cfg, container.peerComponent)
+	go schedulePing(cfg, container.peerComponent)
 
 	go pubSub(container)
 
@@ -49,37 +58,38 @@ func listenAndServe(peerComponent *peercntr.Component, nodeComponent *nodecntr.C
 	peerhttp.Route(r, peerComponent.Commands.AcceptPing)
 	nodehttp.Route(r, nodeComponent.Commands.AcceptClientMessage, nodeComponent.Commands.AcceptMessage)
 
+	slog.Info("Listening on :22137")
 	return http.ListenAndServe(":22137", r)
 }
 
-func schedulePing(peerComponent *peercntr.Component) {
+func schedulePing(cfg *config.Config, peerComponent *peercntr.Component) {
 	handler := peerComponent.Commands.SendPing
-
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(cfg.Peers.PingDuration)
 
 	defer ticker.Stop()
-
 	for range ticker.C {
 		handler.Handle(peercommand.SendPingCommand{})
 	}
 }
 
-func scheduleSave(peerComponent *peercntr.Component) {
-	handler := peerComponent.Commands.SavePeers
+func scheduleSave(cfg *config.Config, peerComponent *peercntr.Component) {
+	if cfg.Peers.UpdateFileDuration == 0 {
+		return
+	}
 
-	ticker := time.NewTicker(10 * time.Second)
+	handler := peerComponent.Commands.SavePeers
+	ticker := time.NewTicker(cfg.Peers.UpdateFileDuration)
 
 	defer ticker.Stop()
-
 	for range ticker.C {
-		err := handler.Handle(peercommand.SavePeersCommand{PathToFile: "/etc/eecoin/peers"})
+		err := handler.Handle(peercommand.SavePeersCommand{PathToFile: cfg.Peers.FilePath})
 		if err != nil {
 			slog.Error("Failed to save peers", "error", err)
 		}
 	}
 }
 
-func pubSub(cntr *container) {
+func pubSub(cntr *Container) {
 	// sentMsgs := cntr.broker.Subscribe("x.message.sent") // TODO: We will implement it later, to discard msgs
 	sendMsgs := cntr.broker.Subscribe("x.message.send")
 

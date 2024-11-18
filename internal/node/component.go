@@ -18,9 +18,8 @@ type Commands struct {
 	PersistMessage      command.PersistMessageHandler
 }
 
-func NewComponent(publisher event.Publisher, peersRepo node.PeersRepository) (Component, error) {
+func NewComponent(publisher event.Publisher, peersRepo node.PeersRepository, seen node.SeenTransactionRepository) (Component, error) {
 	repo := node.NewSimpleInFlightTransactionRepository()
-	seen := node.NewSimpleSeenTransactionRepository() // TODO: refactor when adding a real blockchain impl
 	sender := http.NewSender()
 	sendMessage, err := command.NewSendMessageHandler(repo, seen, sender, peersRepo, publisher)
 	if err != nil {
