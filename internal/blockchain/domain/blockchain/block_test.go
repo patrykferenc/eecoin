@@ -1,88 +1,162 @@
 package blockchain
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestImportBlock(t *testing.T) {
+func TestImportBlock_shouldError(t *testing.T) {
+	t.Parallel()
 	assertThat := assert.New(t)
 
-	//given
-	nonGenesisBlock := Block{
-		-1,
-		time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
-		2137,
-		2136,
-		make([]TransactionID, 0),
-		Challenge{},
+	// given
+	tt := []struct {
+		description string
+		chain       []Block
+		expectedErr error
+	}{
+		{
+			description: "Non genesis block",
+			chain: []Block{
+				{
+					Index:          -1,
+					TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
+					ContentHash:    2137,
+					PrevHash:       2136,
+					Transactions:   make([]TransactionID, 0),
+					Challenge:      Challenge{},
+				},
+			},
+			expectedErr: ChainNotValid,
+		},
 	}
-	genesisBlock := GenerateGenesisBlock()
 
-	//when
-	nonGenesisChain, errorWhichShouldBePresent := ImportBlockchain([]Block{nonGenesisBlock})
-	genesisChain, errorWhichShouldNotBePresent := ImportBlockchain([]Block{genesisBlock})
+	// when
+	for _, tc := range tt {
+		_, err := ImportBlockchain(tc.chain)
 
-	//then
-	assertThat.Nil(nonGenesisChain)
-	assertThat.Equal(errorWhichShouldBePresent, ChainNotValid)
-	assertThat.NotNil(genesisChain)
-	assertThat.Equal(genesisChain.GetLast(), genesisBlock)
-	assertThat.Equal(genesisChain.GetFirst(), genesisBlock)
-	assertThat.Nil(errorWhichShouldNotBePresent)
+		// then
+		assertThat.Equal(tc.expectedErr, err)
+	}
 }
 
-func TestNewBlockWithAddBlock(t *testing.T) {
+func TestImportBlock_shouldWork(t *testing.T) {
+	t.Parallel()
 	assertThat := assert.New(t)
 
-	//given
+	// given
+	genesisBlock := GenerateGenesisBlock()
+
+	// when
+	genesisChain, errorWhichShouldNotBePresent := ImportBlockchain([]Block{genesisBlock})
+	// then
+	assertThat.Nil(errorWhichShouldNotBePresent)
+
+	// and then
+	assertThat.NotNil(genesisChain)
+	// and then
+	assertThat.Equal(genesisChain.GetLast(), genesisBlock)
+	assertThat.Equal(genesisChain.GetFirst(), genesisBlock)
+}
+
+func TestNewBlock(t *testing.T) {
+	t.Parallel()
+	assertThat := assert.New(t)
+
+	// given
+	genesis := GenerateGenesisBlock()
+	chain, err := ImportBlockchain([]Block{genesis})
+	assertThat.Nil(err)
+	// and given
 	timestamp := time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli()
 	transactions := make([]TransactionID, 0)
-	genesisBlock := GenerateGenesisBlock()
-	chain, _ := ImportBlockchain([]Block{genesisBlock})
 
-	//when - then
+	// when
+	newBlock, err := chain.NewBlock(timestamp, transactions)
 
-	invalidIndexBlock := Block{
-		12,
-		time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
-		2137,
-		genesisBlock.ContentHash,
-		make([]TransactionID, 0),
-		Challenge{},
-	}
-
-	invalidPrevHashBlock := Block{
-		1,
-		time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
-		2137,
-		2136,
-		make([]TransactionID, 0),
-		Challenge{},
-	}
-
-	newBlock, errorShouldNotBePresent := chain.NewBlock(timestamp, transactions)
+	// then
+	assertThat.Nil(err)
 	assertThat.NotNil(newBlock)
-	assertThat.Nil(errorShouldNotBePresent)
+}
 
-	_ = chain.AddBlock(invalidIndexBlock)
-	expectedInvalid, errInvalidIdx := chain.GetBlock(1)
-	assertThat.NotEqual(invalidIndexBlock, chain.GetLast())
-	assertThat.NotEqual(invalidIndexBlock, expectedInvalid)
-	assertThat.NotEqual(invalidIndexBlock, chain.GetFirst())
-	assertThat.Equal(errInvalidIdx, BlockNotFound)
+func TestAddBlock_shouldWork(t *testing.T) {
+	t.Parallel()
+	assertThat := assert.New(t)
 
-	_ = chain.AddBlock(invalidPrevHashBlock)
-	expectedInvalid, errInvalidIdx = chain.GetBlock(1)
-	assertThat.NotEqual(invalidIndexBlock, chain.GetLast())
-	assertThat.NotEqual(invalidIndexBlock, expectedInvalid)
-	assertThat.NotEqual(invalidIndexBlock, chain.GetFirst())
-	assertThat.Equal(errInvalidIdx, BlockNotFound)
+	// given
+	genesis := GenerateGenesisBlock()
+	chain, err := ImportBlockchain([]Block{genesis})
+	assertThat.Nil(err)
+	// and given
+	timestamp := time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli()
+	transactions := make([]TransactionID, 0)
 
-	_ = chain.AddBlock(newBlock)
-	expectedActualBlock, _ := chain.GetBlock(1)
+	// and given new block
+	newBlock, err := chain.NewBlock(timestamp, transactions)
+	assertThat.Nil(err)
+
+	// then
+	err = chain.AddBlock(newBlock)
+	assertThat.Nil(err)
+	// and then
 	assertThat.Equal(newBlock, chain.GetLast())
-	assertThat.Equal(newBlock, expectedActualBlock)
-	assertThat.NotEqual(newBlock, chain.GetFirst())
+	// and then
+	expectedIndex := 1
+	actual, err := chain.GetBlock(expectedIndex)
+	assertThat.Nil(err)
+	assertThat.Equal(newBlock, actual)
+}
+
+func TestNewBlockWithAddBlock_shouldNotWork(t *testing.T) {
+	t.Parallel()
+	assertThat := assert.New(t)
+
+	// given
+	genesis := GenerateGenesisBlock()
+	chain, err := ImportBlockchain([]Block{genesis})
+	assertThat.Nil(err)
+
+	tt := []struct {
+		description string
+		block       Block
+	}{
+		{
+			description: "Invalid index",
+			block: Block{
+				Index:          12,
+				TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
+				ContentHash:    2137,
+				PrevHash:       genesis.ContentHash,
+				Transactions:   make([]TransactionID, 0),
+				Challenge:      Challenge{},
+			},
+		},
+		{
+			description: "Invalid prev hash",
+			block: Block{
+				Index:          1,
+				TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
+				ContentHash:    2137,
+				PrevHash:       2136,
+				Transactions:   make([]TransactionID, 0),
+				Challenge:      Challenge{},
+			},
+		},
+	}
+
+	for _, tc := range tt {
+		// when
+		err := chain.AddBlock(tc.block)
+
+		// then
+		assertThat.NotNil(err)
+		// and then
+		assertThat.NotEqual(tc.block, chain.GetLast())
+		// and then
+		_, err = chain.GetBlock(1)
+		assertThat.NotNil(err)
+		assertThat.Equal(BlockNotFound, err)
+	}
 }
