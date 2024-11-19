@@ -76,3 +76,7 @@ func (r *SimpleSeenTransactionRepository) Seen(id blockchain.TransactionID) (boo
 	_, ok := r.seen[id]
 	return ok, nil
 }
+
+func (r *SimpleSeenTransactionRepository) GetChain() blockchain.BlockChain {
+	return blockchain.BlockChain{}
+}
