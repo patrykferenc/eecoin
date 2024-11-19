@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	"log/slog"
 	"net/http"
 	"os"
@@ -41,6 +42,7 @@ func main() {
 	slog.Info("Context constructed")
 
 	go scheduleSave(cfg, container.peerComponent)
+	go schedulePersistChain(cfg, container.nodeComponent.Queries.GetChain.Get())
 	go schedulePing(cfg, container.peerComponent)
 
 	go pubSub(container)
@@ -103,6 +105,22 @@ func scheduleSave(cfg *config.Config, peerComponent *peercntr.Component) {
 		err := handler.Handle(peercommand.SavePeersCommand{PathToFile: cfg.Peers.FilePath})
 		if err != nil {
 			slog.Error("Failed to save peers", "error", err)
+		}
+	}
+}
+
+func schedulePersistChain(cfg *config.Config, chain blockchain.BlockChain) {
+	if cfg.Persistence.UpdateFileDuration == 0 {
+		return
+	}
+
+	ticker := time.NewTicker(cfg.Persistence.UpdateFileDuration)
+
+	defer ticker.Stop()
+	for range ticker.C {
+		err := blockchain.Persist(chain, cfg.Persistence.ChainFilePath)
+		if err != nil {
+			slog.Error("Failed to persist blockchain", "error", err)
 		}
 	}
 }

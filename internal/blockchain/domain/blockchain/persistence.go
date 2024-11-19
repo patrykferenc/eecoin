@@ -52,7 +52,7 @@ func mapToActual(blockchain blockChainDto) (BlockChain, error) {
 	return *chain, nil
 }
 
-func persist(chain BlockChain, path string) error {
+func Persist(chain BlockChain, path string) error {
 	mappedToDto := mapToDto(chain)
 	b, err := json.Marshal(mappedToDto)
 	if err != nil {
@@ -61,21 +61,21 @@ func persist(chain BlockChain, path string) error {
 	return os.WriteFile(path, b, 0600)
 }
 
-func load(path string) (BlockChain, error) {
+func Load(path string) (*BlockChain, error) {
 	persistedContent, err := os.ReadFile(path)
 	if err != nil {
-		return BlockChain{}, err
+		return nil, err
 	}
 
 	blockchainDto := blockChainDto{}
 	err = json.Unmarshal(persistedContent, &blockchainDto)
 	if err != nil {
-		return BlockChain{}, err
+		return nil, err
 	}
 
 	blockchain, err := mapToActual(blockchainDto)
 	if err != nil {
-		return BlockChain{}, err
+		return nil, err
 	}
-	return blockchain, nil
+	return &blockchain, nil
 }

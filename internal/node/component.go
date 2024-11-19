@@ -4,10 +4,12 @@ import (
 	"github.com/patrykferenc/eecoin/internal/common/event"
 	"github.com/patrykferenc/eecoin/internal/node/command"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
+	"github.com/patrykferenc/eecoin/internal/node/query"
 )
 
 type Component struct {
 	Commands Commands
+	Queries  Queries
 }
 
 type Commands struct {
@@ -15,6 +17,10 @@ type Commands struct {
 	AcceptClientMessage command.AcceptClientMessageHandler
 	AcceptMessage       command.AcceptMessageHandler
 	PersistMessage      command.PersistMessageHandler
+}
+
+type Queries struct {
+	GetChain query.GetChain
 }
 
 func NewComponent(

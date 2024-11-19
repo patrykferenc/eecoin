@@ -24,6 +24,18 @@ func NewBlockChain() (*BlockChain, error) {
 	}, nil
 }
 
+func LoadPersistedBlockchain(path string) (*BlockChain, error) {
+	ch, err := blockchain.Load(path)
+	if err != nil {
+		return nil, err
+	}
+	return &BlockChain{chain: ch}, nil
+}
+
+func (b *BlockChain) GetChain() blockchain.BlockChain {
+	return *b.chain
+}
+
 func (b *BlockChain) Seen(id blockchain.TransactionID) (bool, error) {
 	b.rw.RLock()
 	defer b.rw.RUnlock()

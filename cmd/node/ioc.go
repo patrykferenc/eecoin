@@ -34,7 +34,13 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 		return nil, err
 	}
 
-	seenRepo, err := inmem.NewBlockChain()
+	var seenRepo *inmem.BlockChain
+	seenRepo, err = inmem.LoadPersistedBlockchain(cfg.Persistence.ChainFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	seenRepo, err = inmem.NewBlockChain()
 	if err != nil {
 		return nil, err
 	}

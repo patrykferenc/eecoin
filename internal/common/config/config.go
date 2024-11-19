@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	Peers Peers `yaml:"peers"`
-	Log   Log   `yaml:"log"`
+	Peers       Peers       `yaml:"peers"`
+	Log         Log         `yaml:"log"`
+	Persistence Persistence `yaml:"persistence"`
 }
 
 type Peers struct {
@@ -20,6 +21,11 @@ type Peers struct {
 
 type Log struct {
 	Level string `yaml:"level" env:"LOG_LEVEL" env-default:"info"`
+}
+
+type Persistence struct {
+	ChainFilePath      string        `yaml:"chainPath" env:"CHAIN_FILE_PATH" env-default:"/etc/eecoin/chain"`
+	UpdateFileDuration time.Duration `yaml:"updateFileDuration" env:"CHAIN_UPDATE_FILE_DURATION" env-default:"1m"`
 }
 
 func (l *Log) LevelIfSet() (slog.Level, error) {

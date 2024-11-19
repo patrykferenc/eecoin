@@ -53,6 +53,7 @@ func (r *SimpleInFlightTransactionRepository) Discard(id blockchain.TransactionI
 type SeenTransactionRepository interface {
 	Seen(id blockchain.TransactionID) (bool, error)
 	MarkSeen(id blockchain.TransactionID) error
+	GetChain() blockchain.BlockChain
 }
 
 type SimpleSeenTransactionRepository struct {
