@@ -37,12 +37,11 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 	var seenRepo *inmem.BlockChain
 	seenRepo, err = inmem.LoadPersistedBlockchain(cfg.Persistence.ChainFilePath)
 	if err != nil {
-		return nil, err
-	}
-
-	seenRepo, err = inmem.NewBlockChain()
-	if err != nil {
-		return nil, err
+		slog.Error("couldn't load persistent blockchain, creating new runtime chain", err)
+		seenRepo, err = inmem.NewBlockChain()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	inflightRepo := nodedomain.NewSimpleInFlightTransactionRepository()
