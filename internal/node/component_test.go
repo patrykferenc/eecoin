@@ -43,6 +43,7 @@ func TestMessaging_fromClient(t *testing.T) {
 	pub := event.NewChannelBroker()
 	sender := mock.MessageSender{}
 	component, err := component.NewComponent(pub, peers, seen, repo, sender)
+	assertThat.NoError(err)
 	acceptClientMessageHandler := component.Commands.AcceptClientMessage
 	var wg sync.WaitGroup
 	wg.Add(2)

@@ -78,15 +78,15 @@ func TestChannelBroker_shouldPublish_whenMultipleSubscribers(t *testing.T) {
 	}()
 
 	go func() {
-		defer wg.Done()
 		for e := range sub2 {
 			assert.Equal(event, e)
 			data, ok := e.Data().(string)
 			if !ok {
+				wg.Done()
 				assert.Fail("Data is not a string")
 			}
 			assert.Equal("data", data)
-			return
+			wg.Done()
 		}
 	}()
 
