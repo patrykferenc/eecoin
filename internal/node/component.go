@@ -4,11 +4,12 @@ import (
 	"github.com/patrykferenc/eecoin/internal/common/event"
 	"github.com/patrykferenc/eecoin/internal/node/command"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
-	"github.com/patrykferenc/eecoin/internal/node/net/http"
+	"github.com/patrykferenc/eecoin/internal/node/query"
 )
 
 type Component struct {
 	Commands Commands
+	Queries  Queries
 }
 
 type Commands struct {
@@ -18,10 +19,17 @@ type Commands struct {
 	PersistMessage      command.PersistMessageHandler
 }
 
-func NewComponent(publisher event.Publisher, peersRepo node.PeersRepository) (Component, error) {
-	repo := node.NewSimpleInFlightTransactionRepository()
-	seen := node.NewSimpleSeenTransactionRepository() // TODO: refactor when adding a real blockchain impl
-	sender := http.NewSender()
+type Queries struct {
+	GetChain query.GetChain
+}
+
+func NewComponent(
+	publisher event.Publisher,
+	peersRepo node.PeersRepository,
+	seen node.SeenTransactionRepository,
+	repo node.InFlightTransactionRepository,
+	sender node.MessageSender,
+) (Component, error) {
 	sendMessage, err := command.NewSendMessageHandler(repo, seen, sender, peersRepo, publisher)
 	if err != nil {
 		return Component{}, err

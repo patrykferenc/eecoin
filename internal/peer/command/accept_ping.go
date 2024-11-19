@@ -31,7 +31,7 @@ func (h *acceptPingHandler) Handle(cmd AcceptPing) error {
 		return fmt.Errorf("host is empty")
 	}
 	peers := h.peerCtx.Peers()
-	slog.Info("Accepted ping", "host", cmd.Host)
+	slog.Debug("Accepted ping", "host", cmd.Host)
 	peers.UpdatePeerStatus(cmd.Host, peer.StatusHealthy)
 	return nil
 }

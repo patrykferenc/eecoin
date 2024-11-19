@@ -1,15 +1,16 @@
 package peer
 
 import (
-	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestReadFromFile(t *testing.T) {
 	assrt := assert.New(t)
 	// given
-	givenFile := "localhost:8080\n192.168.26.2:8081"
+	givenFile := "10.5.1.1:8080\n192.168.26.2:8081"
 
 	// when
 	peers, err := PeersFromFile(strings.NewReader(givenFile))
@@ -48,7 +49,7 @@ func TestReadFromFileFail(t *testing.T) {
 func TestSaveToFile(t *testing.T) {
 	// given
 	peers := NewPeers([]*Peer{
-		{Host: "localhost:8080", Status: StatusHealthy},
+		{Host: "10.5.1.1:8080", Status: StatusHealthy},
 		{Host: "192.168.21.37:8082", Status: StatusUnknown},
 	})
 
@@ -62,7 +63,7 @@ func TestSaveToFile(t *testing.T) {
 
 	// then
 	got := strings.Split(b.String(), "\n")
-	want := strings.Split("localhost:8080\n192.168.21.37:8082\n", "\n")
+	want := strings.Split("10.5.1.1:8080\n192.168.21.37:8082\n", "\n")
 	length, content, faultyElem := stringSlicesAreEqualWithoutOrder(got, want)
 	if !length {
 		t.Errorf("Peers should have length 2, got %d", len(got))

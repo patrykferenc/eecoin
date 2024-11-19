@@ -30,7 +30,7 @@ func NewSendPingHandler(sender peer.PingSender, peerCtx peer.PeerContext) *sendP
 func (h *sendPingHandler) Handle(cmd SendPingCommand) {
 	peers := h.peerCtx.Peers()
 	allPeers := peers.All()
-	slog.Info("Pinging", "peers", len(allPeers))
+	slog.Debug("Pinging", "peers", len(allPeers))
 
 	// TODO: Can be parallelized
 	for _, p := range allPeers {
@@ -39,7 +39,7 @@ func (h *sendPingHandler) Handle(cmd SendPingCommand) {
 			slog.Info("Ping to failed, marking as unhealthy", "host", p.Host, "err", err)
 			peers.UpdatePeerStatus(p.Host, peer.StatusUnhealthy)
 		} else {
-			slog.Info("Ping to succeeded, marking as healthy", "host", p.Host)
+			slog.Debug("Ping to succeeded, marking as healthy", "host", p.Host)
 			peers.UpdatePeerStatus(p.Host, peer.StatusHealthy)
 		}
 	}

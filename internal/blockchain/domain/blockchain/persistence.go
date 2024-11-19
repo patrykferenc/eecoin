@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-type blockDto struct {
+type BlockDto struct {
 	Index          int             `json:"index"`
 	TimestampMilis int64           `json:"timestampMilis"`
 	ContentHash    uint64          `json:"contentHash"`
@@ -14,14 +14,14 @@ type blockDto struct {
 	Challenge      Challenge       `json:"challenge"`
 }
 
-type blockChainDto struct {
-	Blocks []blockDto `json:"blocks"`
+type ChainDto struct {
+	Blocks []BlockDto `json:"blocks"`
 }
 
-func mapToDto(blockchain BlockChain) blockChainDto {
-	dtoBlocks := make([]blockDto, len(blockchain.blocks))
+func MapToDto(blockchain BlockChain) ChainDto {
+	dtoBlocks := make([]BlockDto, len(blockchain.blocks))
 	for i, block := range blockchain.blocks {
-		dtoBlocks[i] = blockDto{
+		dtoBlocks[i] = BlockDto{
 			Index:          block.Index,
 			TimestampMilis: block.TimestampMilis,
 			ContentHash:    block.ContentHash,
@@ -30,10 +30,10 @@ func mapToDto(blockchain BlockChain) blockChainDto {
 			Challenge:      block.Challenge,
 		}
 	}
-	return blockChainDto{Blocks: dtoBlocks}
+	return ChainDto{Blocks: dtoBlocks}
 }
 
-func mapToActual(blockchain blockChainDto) (BlockChain, error) {
+func MapToActual(blockchain ChainDto) (BlockChain, error) {
 	dtoBlocks := make([]Block, len(blockchain.Blocks))
 	for i, block := range blockchain.Blocks {
 		dtoBlocks[i] = Block{
@@ -52,8 +52,8 @@ func mapToActual(blockchain blockChainDto) (BlockChain, error) {
 	return *chain, nil
 }
 
-func persist(chain BlockChain, path string) error {
-	mappedToDto := mapToDto(chain)
+func Persist(chain BlockChain, path string) error {
+	mappedToDto := MapToDto(chain)
 	b, err := json.Marshal(mappedToDto)
 	if err != nil {
 		return err
@@ -61,21 +61,21 @@ func persist(chain BlockChain, path string) error {
 	return os.WriteFile(path, b, 0600)
 }
 
-func load(path string) (BlockChain, error) {
+func Load(path string) (*BlockChain, error) {
 	persistedContent, err := os.ReadFile(path)
 	if err != nil {
-		return BlockChain{}, err
+		return nil, err
 	}
 
-	blockchainDto := blockChainDto{}
+	blockchainDto := ChainDto{}
 	err = json.Unmarshal(persistedContent, &blockchainDto)
 	if err != nil {
-		return BlockChain{}, err
+		return nil, err
 	}
 
-	blockchain, err := mapToActual(blockchainDto)
+	blockchain, err := MapToActual(blockchainDto)
 	if err != nil {
-		return BlockChain{}, err
+		return nil, err
 	}
-	return blockchain, nil
+	return &blockchain, nil
 }

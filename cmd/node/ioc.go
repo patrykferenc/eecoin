@@ -5,20 +5,24 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/patrykferenc/eecoin/internal/blockchain/inmem"
+	"github.com/patrykferenc/eecoin/internal/common/config"
 	"github.com/patrykferenc/eecoin/internal/common/event"
 	"github.com/patrykferenc/eecoin/internal/node"
+	nodedomain "github.com/patrykferenc/eecoin/internal/node/domain/node"
+	nodehttp "github.com/patrykferenc/eecoin/internal/node/net/http"
 	"github.com/patrykferenc/eecoin/internal/peer"
 )
 
-type container struct {
+type Container struct {
 	nodeComponent *node.Component
 	peerComponent *peer.Component
 
 	broker *event.ChannelBroker
 }
 
-func newContainer() (*container, error) {
-	file, err := getPeersFile()
+func NewContainer(cfg *config.Config) (*Container, error) {
+	file, err := getPeersFile(cfg.Peers.FilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -30,12 +34,24 @@ func newContainer() (*container, error) {
 		return nil, err
 	}
 
-	nodeComponent, err := node.NewComponent(broker, peerComponent.Queries.GetPeers)
+	var seenRepo *inmem.BlockChain
+	seenRepo, err = inmem.LoadPersistedBlockchain(cfg.Persistence.ChainFilePath)
+	if err != nil {
+		slog.Error("couldn't load persistent blockchain, creating new runtime chain", "error", err.Error())
+		seenRepo, err = inmem.NewBlockChain()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	inflightRepo := nodedomain.NewSimpleInFlightTransactionRepository()
+	sender := nodehttp.NewSender()
+	nodeComponent, err := node.NewComponent(broker, peerComponent.Queries.GetPeers, seenRepo, inflightRepo, sender)
 	if err != nil {
 		return nil, err
 	}
 
-	return &container{
+	return &Container{
 		peerComponent: &peerComponent,
 		nodeComponent: &nodeComponent,
 
@@ -43,14 +59,14 @@ func newContainer() (*container, error) {
 	}, nil
 }
 
-func getPeersFile() (io.ReadCloser, error) {
-	file, err := os.Open("/etc/eecoin/peers") // TODO: make it configurable
+func getPeersFile(peersFilePath string) (io.ReadCloser, error) {
+	file, err := os.Open(peersFilePath)
 	if err != nil {
 		if err != os.ErrNotExist {
 			return nil, err
 		}
-		slog.Warn("Peers file not found, creating a new one")
-		file, err = os.Create("/etc/eecoin/peers")
+		slog.Warn("Peers file not found, creating a new one under", "path", peersFilePath)
+		file, err = os.Create(peersFilePath)
 		if err != nil {
 			slog.Error("Failed to create peers file", "error", err)
 			return nil, err

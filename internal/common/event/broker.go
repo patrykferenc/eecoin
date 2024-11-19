@@ -47,7 +47,7 @@ func (b *ChannelBroker) Publish(event Event) error {
 	return nil
 }
 
-func (b *ChannelBroker) Subscribe(routingKey string) <-chan Event {
+func (b *ChannelBroker) subscribe(routingKey string) <-chan Event {
 	b.subscribtionLock.Lock()
 	defer b.subscribtionLock.Unlock()
 
@@ -63,4 +63,33 @@ func (b *ChannelBroker) Subscribe(routingKey string) <-chan Event {
 
 func (b *ChannelBroker) Wait() {
 	b.wg.Wait()
+}
+
+func (b *ChannelBroker) Close() {
+	b.subscribtionLock.Lock()
+	defer b.subscribtionLock.Unlock()
+
+	for _, channels := range b.channels {
+		for _, ch := range channels {
+			close(ch)
+		}
+	}
+}
+
+func (b *ChannelBroker) Route(routingKey string, handler func(Event) error) {
+	channel := b.subscribe(routingKey)
+
+	go func() {
+		for e := range channel {
+			if err := handler(e); err != nil {
+				slog.Error("Error handling event", "error", err)
+			}
+		}
+	}()
+}
+
+func (b *ChannelBroker) RouteAll(handlersByRoutingKey map[string]func(Event) error) {
+	for routingKey, handler := range handlersByRoutingKey {
+		b.Route(routingKey, handler)
+	}
 }

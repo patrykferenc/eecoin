@@ -9,12 +9,12 @@ import (
 )
 
 func TestShouldGetPeers(t *testing.T) {
-	peers := peer.NewPeers([]*peer.Peer{{Host: "localhost:8080", Status: peer.StatusHealthy}})
+	peers := peer.NewPeers([]*peer.Peer{{Host: "10.1.2.3:8080", Status: peer.StatusHealthy}})
 	query := query.NewGetPeers(&mockedPeerContext{peers: peers})
 
 	peerAddresses, err := query.Get()
 	assert.NoError(t, err)
-	assert.Equal(t, []string{"localhost:8080"}, peerAddresses)
+	assert.Equal(t, []string{"10.1.2.3:8080"}, peerAddresses)
 }
 
 type mockedPeerContext struct {

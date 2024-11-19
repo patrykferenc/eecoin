@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
@@ -51,6 +52,8 @@ func (h *persistMessageHandler) Handle(cmd PersistMessage) error {
 	if err := h.repository.Discard(cmd.TransactionID); err != nil {
 		return fmt.Errorf("can not persist message: %w", err)
 	}
+
+	slog.Info("Persisted message", "transactionID", cmd.TransactionID)
 
 	return nil
 }

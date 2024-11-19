@@ -21,11 +21,11 @@ func TestPersistBlockChain(t *testing.T) {
 	_ = chain.AddBlock(newBlock)
 
 	// when - then
-	saveErr := persist(*chain, dir)
+	saveErr := Persist(*chain, dir)
 	assertThat.Nil(saveErr)
 
 	//when - then
-	loaded, err := load(dir)
+	loaded, err := Load(dir)
 
 	assertThat.Nil(err)
 	assertThat.NotNil(loaded)

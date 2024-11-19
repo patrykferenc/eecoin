@@ -6,30 +6,49 @@ services:
       - "22137:22137"
     volumes:
       - "./example/default_peers:/etc/eecoin/peers"
+      - "./config/example.yaml:/etc/eecoin/config.yaml"
+    networks:
+      eenet:
+        ipv4_address: 10.5.1.1
 
   node-beta:
     image: "eecoin/node"
     build: .
     volumes:
       - "./example/some_peers:/etc/eecoin/peers"
+      - "./config/example.yaml:/etc/eecoin/config.yaml"
+    networks:
+      eenet:
+        ipv4_address: 10.5.1.2
 
   node-theta:
     image: "eecoin/node"
     build: .
     volumes:
-      - "./example/some_peers:/etc/eecoin/peers"
+      - "./config/example.yaml:/etc/eecoin/config.yaml"
+    networks:
+      eenet:
+        ipv4_address: 10.5.1.3
 
   node-delta:
     image: "eecoin/node"
     build: .
     volumes:
       - "./example/default_peers:/etc/eecoin/peers"
+      - "./config/example.yaml:/etc/eecoin/config.yaml"
+    networks:
+      eenet:
+        ipv4_address: 10.5.1.4
 
   node-gamma:
     image: "eecoin/node"
     build: .
     volumes:
       - "./example/some_peers:/etc/eecoin/peers"
+      - "./config/example.yaml:/etc/eecoin/config.yaml"
+    networks:
+      eenet:
+        ipv4_address: 10.5.1.5
 
   node-test:
     image: "eecoin/node"
@@ -38,3 +57,15 @@ services:
       EECOIN_SAVE_PEERS: "true"
     volumes:
       - "./example/test_peers:/etc/eecoin/peers"
+      - "./config/example.yaml:/etc/eecoin/config.yaml"
+    networks:
+      eenet:
+        ipv4_address: 10.5.1.6
+
+networks:
+  eenet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1

@@ -10,34 +10,39 @@ type Event interface {
 	ID() string
 	Timestamp() time.Time
 	RoutingKey() string
+	Data() interface{}
 }
 
-type simpleEvent[T any] struct {
+type SimpleEvent struct {
 	id         string
 	timestamp  time.Time
-	data       T
+	data       interface{}
 	routingKey string
 }
 
-func (e simpleEvent[T]) ID() string {
+func (e SimpleEvent) ID() string {
 	return e.id
 }
 
-func (e simpleEvent[T]) Timestamp() time.Time {
+func (e SimpleEvent) Timestamp() time.Time {
 	return e.timestamp
 }
 
-func (e simpleEvent[T]) RoutingKey() string {
+func (e SimpleEvent) RoutingKey() string {
 	return e.routingKey
 }
 
-func New[T any](data T, routingKey string) (Event, error) {
+func (e SimpleEvent) Data() interface{} {
+	return e.data
+}
+
+func New[T any](data T, routingKey string) (SimpleEvent, error) {
 	id, err := uuid.NewV7()
 	if err != nil {
-		return nil, err
+		return SimpleEvent{}, err
 	}
 
-	return simpleEvent[T]{
+	return SimpleEvent{
 		data:       data,
 		timestamp:  time.Now(),
 		id:         id.String(),
