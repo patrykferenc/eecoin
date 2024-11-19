@@ -76,7 +76,7 @@ func listenAndServe(peerComponent *peercntr.Component, nodeComponent *nodecntr.C
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	peerhttp.Route(r, peerComponent.Commands.AcceptPing)
-	nodehttp.Route(r, nodeComponent.Commands.AcceptClientMessage, nodeComponent.Commands.AcceptMessage)
+	nodehttp.Route(r, nodeComponent.Commands.AcceptClientMessage, nodeComponent.Commands.AcceptMessage, nodeComponent.Queries.GetChain)
 
 	slog.Info("Listening on :22137")
 	return http.ListenAndServe(":22137", r)
