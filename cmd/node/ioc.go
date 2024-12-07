@@ -40,7 +40,7 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 	seenRepo, err = inmem.LoadPersistedBlockchain(cfg.Persistence.ChainFilePath)
 	if err != nil {
 		slog.Error("couldn't load persistent blockchain, creating new runtime chain", "error", err.Error())
-		seenRepo, err = inmem.NewBlockChain()
+		seenRepo, err = inmem.NewBlockChain(broker)
 		if err != nil {
 			return nil, err
 		}

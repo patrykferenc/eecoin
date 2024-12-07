@@ -15,14 +15,15 @@ type BlockChain struct {
 	publisher event.Publisher // TODO#30 - we will refactor this class and send the event from the command handler
 }
 
-func NewBlockChain() (*BlockChain, error) {
+func NewBlockChain(publisher event.Publisher) (*BlockChain, error) {
 	genesis := blockchain.GenerateGenesisBlock()
 	ch, err := blockchain.ImportBlockchain([]blockchain.Block{genesis})
 	if err != nil {
 		return nil, err
 	}
 	return &BlockChain{
-		chain: ch,
+		chain:     ch,
+		publisher: publisher,
 	}, nil
 }
 
