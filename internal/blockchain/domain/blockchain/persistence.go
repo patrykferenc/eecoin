@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// TODO#29 - Move persistence logic to a separate package
 type BlockDto struct {
 	Index          int             `json:"index"`
 	TimestampMilis int64           `json:"timestampMilis"`

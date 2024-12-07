@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	blockchainCommand "github.com/patrykferenc/eecoin/internal/blockchain/command"
 	"github.com/patrykferenc/eecoin/internal/common/config"
 	"github.com/patrykferenc/eecoin/internal/common/event"
 	nodecntr "github.com/patrykferenc/eecoin/internal/node"
@@ -161,6 +162,20 @@ func pubSub(cntr *Container) {
 			if err != nil {
 				slog.Error("Failed to handle PersistMessage command", "error", err)
 			}
+			return nil
+		},
+		"x.block.added": func(e event.Event) error {
+			data, ok := e.Data().(blockchain.NewBlockAddedEvent)
+			if !ok {
+				slog.Error("Invalid event data")
+				return nil
+			}
+			cmd := blockchainCommand.AddBlock{ToAdd: data.Block}
+			err := cntr.blockChainComponent.Commands.AddBlock.Handle(cmd)
+			if err != nil {
+				slog.Error("Failed to handle AddBlock command", "error", err)
+			}
+
 			return nil
 		},
 	}

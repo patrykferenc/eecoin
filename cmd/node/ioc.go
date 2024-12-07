@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/patrykferenc/eecoin/internal/blockchain"
 	"github.com/patrykferenc/eecoin/internal/blockchain/inmem"
 	"github.com/patrykferenc/eecoin/internal/common/config"
 	"github.com/patrykferenc/eecoin/internal/common/event"
@@ -15,8 +16,9 @@ import (
 )
 
 type Container struct {
-	nodeComponent *node.Component
-	peerComponent *peer.Component
+	nodeComponent       *node.Component
+	peerComponent       *peer.Component
+	blockChainComponent *blockchain.Component
 
 	broker *event.ChannelBroker
 }
@@ -51,9 +53,12 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 		return nil, err
 	}
 
+	blockChainComponent := blockchain.NewComponent(seenRepo, peerComponent.Queries.GetPeers)
+
 	return &Container{
-		peerComponent: &peerComponent,
-		nodeComponent: &nodeComponent,
+		peerComponent:       &peerComponent,
+		nodeComponent:       &nodeComponent,
+		blockChainComponent: &blockChainComponent,
 
 		broker: broker,
 	}, nil
