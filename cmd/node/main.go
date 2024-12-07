@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -110,6 +111,7 @@ func scheduleSave(cfg *config.Config, peerComponent *peercntr.Component) {
 }
 
 func schedulePersistChain(cfg *config.Config, chain blockchain.BlockChain) {
+	slog.Info("in schedule")
 	if cfg.Persistence.UpdateFileDuration == 0 {
 		return
 	}

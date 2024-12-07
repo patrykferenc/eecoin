@@ -57,5 +57,8 @@ func NewComponent(
 			AcceptMessage:       acceptMessage,
 			PersistMessage:      persistMessage,
 		},
+		Queries: Queries{
+			GetChain: query.NewGetChain(seen),
+		},
 	}, nil
 }
