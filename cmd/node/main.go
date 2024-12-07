@@ -11,9 +11,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	blockchainCommand "github.com/patrykferenc/eecoin/internal/blockchain/command"
+	blockchainHttp "github.com/patrykferenc/eecoin/internal/blockchain/net/http"
 	"github.com/patrykferenc/eecoin/internal/common/config"
 	"github.com/patrykferenc/eecoin/internal/common/event"
-	nodecntr "github.com/patrykferenc/eecoin/internal/node"
 	"github.com/patrykferenc/eecoin/internal/node/command"
 	"github.com/patrykferenc/eecoin/internal/node/domain/node"
 	nodehttp "github.com/patrykferenc/eecoin/internal/node/net/http"
@@ -49,7 +49,7 @@ func main() {
 
 	go pubSub(container)
 
-	if err := listenAndServe(container.peerComponent, container.nodeComponent); err != nil {
+	if err := listenAndServe(container); err != nil {
 		slog.Error("Failed to start HTTP server", "error", err)
 		return
 	}
@@ -73,12 +73,13 @@ func setLoggerLevel(cfg *config.Config) error {
 	return nil
 }
 
-func listenAndServe(peerComponent *peercntr.Component, nodeComponent *nodecntr.Component) error {
+func listenAndServe(container *Container) error {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	peerhttp.Route(r, peerComponent.Commands.AcceptPing)
-	nodehttp.Route(r, nodeComponent.Commands.AcceptClientMessage, nodeComponent.Commands.AcceptMessage, nodeComponent.Queries.GetChain)
+	peerhttp.Route(r, container.peerComponent.Commands.AcceptPing)
+	nodehttp.Route(r, container.nodeComponent.Commands.AcceptClientMessage, container.nodeComponent.Commands.AcceptMessage, container.nodeComponent.Queries.GetChain)
+	blockchainHttp.Route(r, container.blockChainComponent.Commands.AddBlock)
 
 	slog.Info("Listening on :22137")
 	return http.ListenAndServe(":22137", r)
@@ -112,7 +113,6 @@ func scheduleSave(cfg *config.Config, peerComponent *peercntr.Component) {
 }
 
 func schedulePersistChain(cfg *config.Config, chain blockchain.BlockChain) {
-	slog.Info("in schedule")
 	if cfg.Persistence.UpdateFileDuration == 0 {
 		return
 	}

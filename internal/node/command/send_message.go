@@ -59,6 +59,9 @@ func (h *sendMessageHandler) Handle(cmd SendMessage) error {
 	if err != nil {
 		return fmt.Errorf("can not send message: %w", err)
 	}
+	if transaction == nil {
+		return fmt.Errorf("can not send message: transaction not found with id %s", cmd.TransactionID)
+	}
 
 	peers, err := h.peeersRepository.Get()
 	if err != nil {
