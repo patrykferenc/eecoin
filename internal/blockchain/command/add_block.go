@@ -25,7 +25,7 @@ type addBlockHandler struct {
 	repo BlockChainRepository
 }
 
-type BlockChainRepository interface { // TODO#30 make not public
+type BlockChainRepository interface { // TODO#30 make not public, refactor to not return the blockchain as a whole (unsafe to read)
 	GetChain() blockchain.BlockChain
 }
 

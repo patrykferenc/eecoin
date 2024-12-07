@@ -53,7 +53,7 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 		return nil, err
 	}
 
-	blockChainComponent := blockchain.NewComponent(seenRepo)
+	blockChainComponent := blockchain.NewComponent(seenRepo, peerComponent.Queries.GetPeers)
 
 	return &Container{
 		peerComponent:       &peerComponent,
