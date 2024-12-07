@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
+	"github.com/patrykferenc/eecoin/internal/common/event"
 )
 
 type BlockChain struct {
-	chain *blockchain.BlockChain
-	rw    sync.RWMutex
+	chain     *blockchain.BlockChain
+	rw        sync.RWMutex
+	publisher event.Publisher // TODO#30 - we will refactor this class and send the event from the command handler
 }
 
 func NewBlockChain() (*BlockChain, error) {
@@ -52,12 +54,22 @@ func (b *BlockChain) Seen(id blockchain.TransactionID) (bool, error) {
 }
 
 func (b *BlockChain) MarkSeen(id blockchain.TransactionID) error {
+	b.rw.Lock()
 	block, err := b.chain.NewBlock(time.Now().UnixMilli(), []blockchain.TransactionID{id})
 	if err != nil {
+		b.rw.Unlock()
 		return fmt.Errorf("could not mark block as seen: new block: %w", err)
 	}
+	b.rw.Unlock()
 
-	b.rw.Lock()
-	defer b.rw.Unlock()
-	return b.chain.AddBlock(block)
+	e, err := event.New(blockchain.NewBlockAddedEvent{Block: block}, "x.block.added")
+	if err != nil {
+		return fmt.Errorf("could not mark block as seen: new event: %w", err)
+	}
+
+	if err := b.publisher.Publish(e); err != nil {
+		return fmt.Errorf("could not mark block as seen: publish event: %w", err)
+	}
+
+	return nil
 }
