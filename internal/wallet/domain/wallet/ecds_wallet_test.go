@@ -1,62 +1,59 @@
 package wallet
 
 import (
-	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestGenerateRsaKey(t *testing.T) {
+func TestGenerateEcdsaKey(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
 
 	//given
-	rsaKeySizeInBits := 2048
-	bitsInByte := 8
-	rsaKey, _ := rsa.GenerateKey(rand.Reader, rsaKeySizeInBits)
-	pubFromKey := rsaKey.Public()
+	ecdsaKey, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	pubFromKey := ecdsaKey.Public()
 
 	//when
-	result, err := NewRsaKey()
+	result, err := NewEcdsaKey()
 
 	//then
 	assertThat.NotNil(result)
 	assertThat.Nil(err)
-	assertThat.IsTypef(result.private, rsaKey, "Private Keys should be the same type %T", rsaKey)
+	assertThat.IsTypef(result.private, ecdsaKey, "Private Keys should be the same type %T", ecdsaKey)
 	assertThat.IsTypef(result.Public, pubFromKey, "Private Keys should be the same type %T", pubFromKey)
-	assertThat.Equal(result.private.Size(), rsaKeySizeInBits/bitsInByte)
 }
 
-func TestNewRsaWallet(t *testing.T) {
+func TestNewEcdsaWallet(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
 
 	//given
-	mainId, _ := NewRsaKey()
+	mainId, _ := NewEcdsaKey()
 	//when
-	result := NewRsaWallet(&mainId)
+	result := NewEcdsaWallet(&mainId)
 	//then
 	assertThat.NotNil(result)
 	assertThat.Equal(&mainId, result.MainId)
 	assertThat.NotNil(result.Keys)
 }
 
-func TestRsaWallet_Add(t *testing.T) {
+func TestEcdsaWallet_Add(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
 
 	//given
-	mainId, _ := NewRsaKey()
-	key1, _ := NewRsaKey()
-	key2, _ := NewRsaKey()
+	mainId, _ := NewEcdsaKey()
+	key1, _ := NewEcdsaKey()
+	key2, _ := NewEcdsaKey()
 
-	justPrivate := Key[*rsa.PrivateKey, crypto.PublicKey]{private: key1.private, algType: RSA}
-	justPublic := Key[*rsa.PrivateKey, crypto.PublicKey]{Public: key2.Public, algType: RSA}
-	allNil := Key[*rsa.PrivateKey, crypto.PublicKey]{algType: RSA}
+	justPrivate := EcdsaKey{private: key1.private, algType: RSA}
+	justPublic := EcdsaKey{Public: key2.Public, algType: RSA}
+	allNil := EcdsaKey{algType: RSA}
 	//when - then
-	result := NewRsaWallet(&mainId)
+	result := NewEcdsaWallet(&mainId)
 	_ = result.Add(justPrivate)
 	assertThat.Len(result.Keys, 2)
 	assertThat.True(result.Keys[key1.Public].Present)
@@ -70,63 +67,62 @@ func TestRsaWallet_Add(t *testing.T) {
 	assertThat.ErrorIs(err, NoKeysFound)
 
 }
-func TestRsaWallet_Type(t *testing.T) {
+func TestEcdsaWallet_Type(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
 
 	//given
-	mainId, _ := NewRsaKey()
+	mainId, _ := NewEcdsaKey()
 	//when
-	result := NewRsaWallet(&mainId)
+	result := NewEcdsaWallet(&mainId)
 	//then
-	assertThat.Equal(RSA, result.Type())
+	assertThat.Equal(ECDSA, result.Type())
 }
-func TestRsaWallet_SetMainIdentity(t *testing.T) {
+func TestEcdsaWallet_SetMainIdentity(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
 
 	//given
-	mainId, _ := NewRsaKey()
-	anotherId, _ := NewRsaKey()
+	mainId, _ := NewEcdsaKey()
+	anotherId, _ := NewEcdsaKey()
 	//when
-	result := NewRsaWallet(&mainId)
+	result := NewEcdsaWallet(&mainId)
 	//then
 	_ = result.SetMainIdentity(&anotherId)
 	assertThat.Equal(anotherId.private, result.MainId.private)
 
 }
-
-func TestToPemRsa(t *testing.T) {
+func TestToPemEcdsa(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
-	mainId, _ := NewRsaKey()
+	mainId, _ := NewEcdsaKey()
 
-	resultToPem := PublicToPemRsa(mainId)
-	resultFromPem, _ := PublicFromPemRsa(resultToPem)
+	resultToPem := PublicToPemEcdsa(mainId)
+	resultFromPem, _ := PublicFromPemEcdsa(resultToPem)
 
-	resultPrivToPem := PrivateToPemRsa(mainId)
-	resultPrivFromPem, _ := PrivateFromPemRsa(resultPrivToPem)
+	resultPrivToPem := PrivateToPemEcdsa(mainId)
+	resultPrivFromPem, _ := PrivateFromPemEcdsa(resultPrivToPem)
 
 	assertThat.Equal(resultFromPem.Public, mainId.Public)
 	assertThat.Equal(resultPrivFromPem.private, mainId.private)
 }
-func TestSavingMainIdentityRsa(t *testing.T) {
+func TestSavingMainIdentityEcdsa(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
 	dir := t.TempDir()
 	//given
-	mainId, _ := NewRsaKey()
-	privOnly, _ := NewRsaKey()
-	pubOnly, _ := NewRsaKey()
+	mainId, _ := NewEcdsaKey()
+	privOnly, _ := NewEcdsaKey()
+	pubOnly, _ := NewEcdsaKey()
 
 	pass := "dupa"
-	w := NewRsaWallet(&mainId)
+	w := NewEcdsaWallet(&mainId)
 	_ = w.Add(privOnly)
 	_ = w.Add(pubOnly)
 	//when
-	saveError := w.ExportWalletRsa(dir, &pass)
+	saveError := w.ExportWalletEcdsa(dir, &pass)
 
-	wallet, readError := ReadWalletFromDirectoryRsa(dir, &pass)
+	wallet, readError := ReadWalletFromDirectoryEcdsa(dir, &pass)
 	//then
 	assertThat.Nil(saveError)
 	assertThat.Nil(readError)

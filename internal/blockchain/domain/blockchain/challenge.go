@@ -7,11 +7,12 @@ import (
 	"encoding/gob"
 	"errors"
 	"github.com/gymshark/go-hasher"
+	"math/bits"
 	"math/rand/v2"
 )
 
 var (
-	NotValidDifficulty = errors.New("difficulty not valid, it must be between 2 and 32")
+	NotValidDifficulty = errors.New("difficulty not valid, it must be between 2 and 256")
 )
 
 type Challenge struct {
@@ -37,11 +38,11 @@ func (c *Challenge) MatchesDifficulty() bool {
 	if err != nil {
 		return false
 	}
-	if len(byteVal) < c.Difficulty {
+	if len(byteVal) < c.Difficulty/8 || len(byteVal) == 0 {
 		return false
 	}
-	for i := 0; i < c.Difficulty; i++ {
-		if byteVal[i] != 0 {
+	for i := 0; i <= c.Difficulty/8; i++ {
+		if bits.LeadingZeros8(byteVal[i]) < c.Difficulty-(8*i) {
 			return false
 		}
 	}
@@ -69,7 +70,7 @@ func (c *Challenge) RollUntilMatchesDifficultyCapped(maxIterations int, previous
 }
 
 func NewChallenge(difficulty int, timeCapMillis int64) (Challenge, error) {
-	if difficulty >= 2 && difficulty <= 32 {
+	if difficulty >= 2 && difficulty <= 256 {
 		return Challenge{
 			Difficulty:    difficulty,
 			TimeCapMillis: timeCapMillis,
