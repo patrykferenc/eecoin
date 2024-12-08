@@ -71,8 +71,8 @@ func (b *Broadcaster) Broadcast(block blockchain.Block, peers []string) error {
 type blockDTO struct {
 	Index          int      `json:"index"`
 	TimestampMilis int64    `json:"timestamp"`
-	ContentHash    uint64   `json:"content_hash"`
-	PrevHash       uint64   `json:"prev_hash"`
+	ContentHash    string   `json:"content_hash"`
+	PrevHash       string   `json:"prev_hash"`
 	Transactions   []string `json:"transactions"` // TODO#30
 }
 
