@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
 	"log/slog"
 	"net/http"
 	"os"
@@ -121,7 +122,7 @@ func schedulePersistChain(cfg *config.Config, chain blockchain.BlockChain) {
 
 	defer ticker.Stop()
 	for range ticker.C {
-		err := blockchain.Persist(chain, cfg.Persistence.ChainFilePath)
+		err := persistence.Persist(chain, cfg.Persistence.ChainFilePath)
 		if err != nil {
 			slog.Error("Failed to persist blockchain", "error", err)
 		}

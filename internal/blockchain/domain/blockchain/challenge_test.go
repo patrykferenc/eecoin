@@ -1,12 +1,13 @@
 package blockchain
 
 import (
+	"encoding/base64"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewChallange_shouldError(t *testing.T) {
+func TestNewChallenge_shouldError(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
 
@@ -27,22 +28,18 @@ func TestNewChallange_shouldError(t *testing.T) {
 			description: "Difficulty too big",
 			difficulty:  66,
 		},
-		{
-			description: "Difficulty not even",
-			difficulty:  3,
-		},
 	}
 
 	for _, tc := range tt {
 		// when
-		_, err := NewChallenge(tc.difficulty)
+		_, err := NewChallenge(tc.difficulty, 60)
 
 		// then
 		assertThat.Equal(NotValidDifficulty, err)
 	}
 }
 
-func TestNewChallange_shouldWork(t *testing.T) {
+func TestNewChallenge_shouldWork(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
 
@@ -56,8 +53,8 @@ func TestNewChallange_shouldWork(t *testing.T) {
 			difficulty:  2,
 		},
 		{
-			description: "Difficulty 64",
-			difficulty:  64,
+			description: "Difficulty 32",
+			difficulty:  32,
 		},
 		{
 			description: "Difficulty 4",
@@ -67,7 +64,7 @@ func TestNewChallange_shouldWork(t *testing.T) {
 
 	for _, tc := range tt {
 		// when
-		challenge, err := NewChallenge(tc.difficulty)
+		challenge, err := NewChallenge(tc.difficulty, 60)
 
 		// then
 		assertThat.Nil(err)
@@ -80,17 +77,21 @@ func TestRollNonce(t *testing.T) {
 	assertThat := assert.New(t)
 
 	// given
-	challenge, err := NewChallenge(2)
+	challenge, err := NewChallenge(2, 60)
 	assertThat.Nil(err)
 
 	// and given
 	initialNonce := challenge.Nonce
 	initialHash := challenge.HashValue
 
+	// and given
+	prePreparedBlock := GenerateGenesisBlock()
+
 	// when
-	challenge.RollNonce()
+	err = challenge.RollNonce(prePreparedBlock, 60)
 
 	// then
+	assertThat.Nil(err)
 	assertThat.NotEqual(initialNonce, challenge.Nonce)
 	assertThat.NotEqual(initialHash, challenge.HashValue)
 }
@@ -100,7 +101,8 @@ func TestChallengeMatchesDifficulty_shouldMatch(t *testing.T) {
 	assertThat := assert.New(t)
 
 	// given
-	challenge := Challenge{Difficulty: 4, HashValue: []byte{0, 0, 1}}
+	challangeHashStr := base64.StdEncoding.EncodeToString([]byte{0, 0, 0, 0, 1})
+	challenge := Challenge{Difficulty: 4, HashValue: challangeHashStr}
 
 	// then
 	assertThat.True(challenge.MatchesDifficulty())
@@ -116,7 +118,7 @@ func TestChallengeMatchesDifficulty_shouldNotMatch(t *testing.T) {
 	}{
 		{
 			description: "Invalid hash",
-			challenge:   Challenge{Difficulty: 4, HashValue: []byte{0, 1, 1}},
+			challenge:   Challenge{Difficulty: 4, HashValue: "01"},
 		},
 		{
 			description: "Nil hash",
@@ -135,20 +137,24 @@ func TestRollUntil(t *testing.T) {
 	assertThat := assert.New(t)
 
 	// given
-	challenge, _ := NewChallenge(2)
+	challenge, _ := NewChallenge(2, 60)
 	initialNonce := challenge.Nonce
 	initialHash := challenge.HashValue
 
+	// and given
+	prePreparedBlock := GenerateGenesisBlock()
+
 	// when
-	challenge.RollUntilMatchesDifficultyCapped(2)
+	err := challenge.RollUntilMatchesDifficultyCapped(2, prePreparedBlock, 60)
 
 	// then
+	assertThat.Nil(err)
 	assertThat.NotEqual(initialNonce, challenge.Nonce)
 	assertThat.NotEqual(initialHash, challenge.HashValue)
 }
 
 func mustNewChallenge(difficulty int) Challenge {
-	challenge, err := NewChallenge(difficulty)
+	challenge, err := NewChallenge(difficulty, 60)
 	if err != nil {
 		panic(err)
 	}

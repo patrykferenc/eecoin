@@ -1,9 +1,9 @@
-package blockchain
+package persistence
 
 import (
+	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	"time"
 )
 
 func TestPersistBlockChain(t *testing.T) {
@@ -11,14 +11,8 @@ func TestPersistBlockChain(t *testing.T) {
 
 	// given
 	dir := t.TempDir() + "/chain"
-	genesis := GenerateGenesisBlock()
-	chain, _ := ImportBlockchain([]Block{genesis})
-
-	// and given
-	timestamp := time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli()
-	transactions := make([]TransactionID, 0)
-	newBlock, _ := chain.NewBlock(timestamp, transactions)
-	_ = chain.AddBlock(newBlock)
+	genesis := blockchain.GenerateGenesisBlock()
+	chain, _ := blockchain.ImportBlockchain([]blockchain.Block{genesis})
 
 	// when - then
 	saveErr := Persist(*chain, dir)

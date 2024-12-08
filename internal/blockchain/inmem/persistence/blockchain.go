@@ -1,27 +1,27 @@
-package blockchain
+package persistence
 
 import (
 	"encoding/json"
+	bc "github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	"os"
 )
 
-// TODO#29 - Move persistence logic to a separate package
 type BlockDto struct {
-	Index          int             `json:"index"`
-	TimestampMilis int64           `json:"timestampMilis"`
-	ContentHash    uint64          `json:"contentHash"`
-	PrevHash       uint64          `json:"prevHash"`
-	Transactions   []TransactionID `json:"transactions"`
-	Challenge      Challenge       `json:"challenge"`
+	Index          int                `json:"index"`
+	TimestampMilis int64              `json:"timestampMilis"`
+	ContentHash    string             `json:"contentHash"`
+	PrevHash       string             `json:"prevHash"`
+	Transactions   []bc.TransactionID `json:"transactions"`
+	Challenge      bc.Challenge       `json:"challenge"`
 }
 
 type ChainDto struct {
 	Blocks []BlockDto `json:"blocks"`
 }
 
-func MapToDto(blockchain BlockChain) ChainDto {
-	dtoBlocks := make([]BlockDto, len(blockchain.blocks))
-	for i, block := range blockchain.blocks {
+func MapToDto(blockchain bc.BlockChain) ChainDto {
+	dtoBlocks := make([]BlockDto, len(blockchain.Blocks))
+	for i, block := range blockchain.Blocks {
 		dtoBlocks[i] = BlockDto{
 			Index:          block.Index,
 			TimestampMilis: block.TimestampMilis,
@@ -34,10 +34,10 @@ func MapToDto(blockchain BlockChain) ChainDto {
 	return ChainDto{Blocks: dtoBlocks}
 }
 
-func MapToActual(blockchain ChainDto) (BlockChain, error) {
-	dtoBlocks := make([]Block, len(blockchain.Blocks))
-	for i, block := range blockchain.Blocks {
-		dtoBlocks[i] = Block{
+func MapToActual(chain ChainDto) (bc.BlockChain, error) {
+	dtoBlocks := make([]bc.Block, len(chain.Blocks))
+	for i, block := range chain.Blocks {
+		dtoBlocks[i] = bc.Block{
 			Index:          block.Index,
 			TimestampMilis: block.TimestampMilis,
 			ContentHash:    block.ContentHash,
@@ -46,14 +46,14 @@ func MapToActual(blockchain ChainDto) (BlockChain, error) {
 			Challenge:      block.Challenge,
 		}
 	}
-	chain, err := ImportBlockchain(dtoBlocks)
+	output, err := bc.ImportBlockchain(dtoBlocks)
 	if err != nil {
-		return BlockChain{}, err
+		return bc.BlockChain{}, err
 	}
-	return *chain, nil
+	return *output, nil
 }
 
-func Persist(chain BlockChain, path string) error {
+func Persist(chain bc.BlockChain, path string) error {
 	mappedToDto := MapToDto(chain)
 	b, err := json.Marshal(mappedToDto)
 	if err != nil {
@@ -62,7 +62,7 @@ func Persist(chain BlockChain, path string) error {
 	return os.WriteFile(path, b, 0600)
 }
 
-func Load(path string) (*BlockChain, error) {
+func Load(path string) (*bc.BlockChain, error) {
 	persistedContent, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err

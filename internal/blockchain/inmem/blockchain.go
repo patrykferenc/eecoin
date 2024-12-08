@@ -2,6 +2,7 @@ package inmem
 
 import (
 	"fmt"
+	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
 	"sync"
 	"time"
 
@@ -28,7 +29,7 @@ func NewBlockChain(publisher event.Publisher) (*BlockChain, error) {
 }
 
 func LoadPersistedBlockchain(path string) (*BlockChain, error) {
-	ch, err := blockchain.Load(path)
+	ch, err := persistence.Load(path)
 	if err != nil {
 		return nil, err
 	}
