@@ -2,6 +2,7 @@ package inmem
 
 import (
 	"fmt"
+	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
 	"sync"
 	"time"
 
@@ -28,7 +29,7 @@ func NewBlockChain(publisher event.Publisher) (*BlockChain, error) {
 }
 
 func LoadPersistedBlockchain(path string) (*BlockChain, error) {
-	ch, err := blockchain.Load(path)
+	ch, err := persistence.Load(path)
 	if err != nil {
 		return nil, err
 	}
@@ -54,9 +55,11 @@ func (b *BlockChain) Seen(id blockchain.TransactionID) (bool, error) {
 	return true, nil
 }
 
+// TODO add solved challange in order to create a new block
 func (b *BlockChain) MarkSeen(id blockchain.TransactionID) error {
 	b.rw.Lock()
-	block, err := b.chain.NewBlock(time.Now().UnixMilli(), []blockchain.TransactionID{id})
+	// TODO solved challange should be injected in NewBlock here
+	block, err := b.chain.NewBlock(time.Now().UnixMilli(), []blockchain.TransactionID{id}, blockchain.Challenge{})
 	if err != nil {
 		b.rw.Unlock()
 		return fmt.Errorf("could not mark block as seen: new block: %w", err)

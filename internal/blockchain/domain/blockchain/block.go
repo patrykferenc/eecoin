@@ -1,14 +1,15 @@
 package blockchain
 
 import (
+	"bytes"
+	"encoding/gob"
 	"errors"
-	"math"
+	"github.com/gymshark/go-hasher"
 	"time"
-
-	"github.com/mitchellh/hashstructure/v2"
 )
 
 var (
+	InvalidContentHash    = "Invalid Content Hash"
 	BlockNotFound         = errors.New("block not found")
 	BlockNotValid         = errors.New("block is not valid")
 	ChainNotValid         = errors.New("chain not valid")
@@ -18,62 +19,70 @@ var (
 type Block struct {
 	Index          int
 	TimestampMilis int64
-	ContentHash    uint64
-	PrevHash       uint64
+	ContentHash    string
+	PrevHash       string
 	Transactions   []TransactionID
 	Challenge      Challenge
 }
 
 type BlockChain struct {
-	blocks []Block
+	Blocks []Block
 }
 
-func (chain *BlockChain) NewBlock(timestamp int64, transactions []TransactionID) (Block, error) {
-	previousHash := chain.blocks[len(chain.blocks)-1].ContentHash
-	blockWithoutHash := &Block{
-		Index:          len(chain.blocks),
+func (chain *BlockChain) NewBlock(timestamp int64, transactions []TransactionID, solved Challenge) (Block, error) {
+	if !solved.MatchesDifficulty() || !blockCreatedAfterPreviousWithinTimeCap(timestamp, solved, chain.GetLast()) {
+		return Block{}, BlockNotValid
+	}
+	previousHash := chain.Blocks[len(chain.Blocks)-1].ContentHash
+	newBlock := &Block{
+		Index:          len(chain.Blocks),
 		TimestampMilis: timestamp,
 		PrevHash:       previousHash,
 		Transactions:   transactions,
+		Challenge:      solved,
 	}
-	contentHash, err := CalculateHash(*blockWithoutHash)
+	contentHash, err := CalculateHash(*newBlock)
 	if err != nil {
 		return Block{}, err
 	}
-	blockWithoutHash.ContentHash = contentHash
-	return *blockWithoutHash, nil
+	newBlock.ContentHash = contentHash
+	return *newBlock, nil
 }
 
-func (chain *BlockChain) AddBlock(block Block) error {
-	if isValidBasedOnPrevious(block, chain.GetLast()) {
-		chain.blocks = append(chain.blocks, block)
+func blockCreatedAfterPreviousWithinTimeCap(timestamp int64, solved Challenge, latest Block) bool {
+	return timestamp-latest.TimestampMilis > solved.TimeCapMillis
+}
+
+func (chain *BlockChain) AddBlock(new Block) error {
+	if isValidBasedOnPrevious(new, chain.GetLast()) {
+		chain.Blocks = append(chain.Blocks, new)
 		return nil
 	}
 	return BlockNotValid
 }
 
 func (chain *BlockChain) RemoveBlocksStartingWithIndex(index int) {
-	shortenedChain := chain.blocks[:len(chain.blocks)-index]
-	chain.blocks = shortenedChain
+	shortenedChain := chain.Blocks[:len(chain.Blocks)-index]
+	chain.Blocks = shortenedChain
 }
 
 func (chain *BlockChain) GetBlock(index int) (Block, error) {
-	if index >= len(chain.blocks) || index < 0 {
+	if index >= len(chain.Blocks) || index < 0 {
 		return Block{}, BlockNotFound
 	}
-	return chain.blocks[index], nil
+	return chain.Blocks[index], nil
 }
 
 func (chain *BlockChain) GetLast() Block {
-	return chain.blocks[len(chain.blocks)-1]
+	return chain.Blocks[len(chain.Blocks)-1]
 }
 
 func (chain *BlockChain) GetFirst() Block {
-	return chain.blocks[0]
+	return chain.Blocks[0]
 }
 
-func (chain *BlockChain) GetBlockByHash(hash uint64) (Block, error) {
-	for _, block := range chain.blocks {
+func (chain *BlockChain) GetBlockByHash(hash string) (Block, error) {
+	for _, block := range chain.Blocks {
 		if block.ContentHash == hash {
 			return block, nil
 		}
@@ -82,7 +91,7 @@ func (chain *BlockChain) GetBlockByHash(hash uint64) (Block, error) {
 }
 
 func (chain *BlockChain) GetBlockByTransactionID(id TransactionID) (Block, error) {
-	for _, block := range chain.blocks {
+	for _, block := range chain.Blocks {
 		for _, transaction := range block.Transactions {
 			if transaction == id {
 				return block, nil
@@ -102,7 +111,7 @@ func ImportBlockchain(blocks []Block) (*BlockChain, error) {
 		}
 	}
 	return &BlockChain{
-		blocks: blocks,
+		Blocks: blocks,
 	}, nil
 }
 
@@ -117,18 +126,21 @@ func GenerateGenesisBlock() Block {
 	return *genesisBlock
 }
 
-func CalculateHash(block Block) (uint64, error) {
+func CalculateHash(block Block) (string, error) {
 	blockWithoutHash := Block{
 		Index:          block.Index,
 		TimestampMilis: block.TimestampMilis,
 		PrevHash:       block.PrevHash,
 		Transactions:   block.Transactions,
+		Challenge:      block.Challenge,
 	}
-	contentHash, err := hashstructure.Hash(&blockWithoutHash, hashstructure.FormatV2, nil)
-	if err != nil {
-		return uint64(math.NaN()), err
+	var structByteBuffer bytes.Buffer
+	enc := gob.NewEncoder(&structByteBuffer)
+	if err := enc.Encode(blockWithoutHash); err != nil {
+		return InvalidContentHash, err
 	}
-	return contentHash, nil
+	structureHash := hasher.Sha256(structByteBuffer.Bytes()).Base64()
+	return structureHash, nil
 }
 
 func isValidGenesis(block Block) bool {
@@ -147,7 +159,9 @@ func isValidGenesis(block Block) bool {
 func isValidBasedOnPrevious(newBlock Block, previous Block) bool {
 	contentHash, _ := CalculateHash(newBlock)
 	if contentHash == newBlock.ContentHash {
-		return newBlock.Index == previous.Index+1 && newBlock.PrevHash == previous.ContentHash
+		return newBlock.Index == previous.Index+1 && newBlock.PrevHash == previous.ContentHash &&
+			Verify(previous, newBlock.TimestampMilis, newBlock.Challenge.Nonce, newBlock.Challenge.HashValue) &&
+			blockCreatedAfterPreviousWithinTimeCap(newBlock.TimestampMilis, newBlock.Challenge, previous)
 	}
 	return false
 }

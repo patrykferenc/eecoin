@@ -59,8 +59,8 @@ func TestBroadcaster_Broadcast(t *testing.T) {
 	mockBlock := blockchain.Block{
 		Index:          1,
 		TimestampMilis: 123456789,
-		ContentHash:    12345,
-		PrevHash:       54321,
+		ContentHash:    "12345",
+		PrevHash:       "54321",
 		Transactions:   []blockchain.TransactionID{"tx1", "tx2"},
 	}
 	expectedBody := blockDTO{
