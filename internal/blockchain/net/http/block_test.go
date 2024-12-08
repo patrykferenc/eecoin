@@ -30,10 +30,10 @@ func (m *mockHandler) Handle(command command.AddBlock) error {
 			return fmt.Errorf("expected %d, got %d", m.expected.TimestampMilis, command.ToAdd.TimestampMilis)
 		}
 		if m.expected.ContentHash != command.ToAdd.ContentHash {
-			return fmt.Errorf("expected %d, got %d", m.expected.ContentHash, command.ToAdd.ContentHash)
+			return fmt.Errorf("expected %s, got %s", m.expected.ContentHash, command.ToAdd.ContentHash)
 		}
 		if m.expected.PrevHash != command.ToAdd.PrevHash {
-			return fmt.Errorf("expected %d, got %d", m.expected.PrevHash, command.ToAdd.PrevHash)
+			return fmt.Errorf("expected %s, got %s", m.expected.PrevHash, command.ToAdd.PrevHash)
 		}
 	}
 	return m.err
@@ -44,8 +44,8 @@ func TestBlockHandler_HandleBlockPost(t *testing.T) {
 	mockBlockDTO := blockDTO{
 		Index:          1,
 		TimestampMilis: 1630000000000,
-		ContentHash:    12345,
-		PrevHash:       54321,
+		ContentHash:    "12345",
+		PrevHash:       "54321",
 		Transactions:   []string{"tx1", "tx2"},
 	}
 	mockBlock := blockchain.Block{
