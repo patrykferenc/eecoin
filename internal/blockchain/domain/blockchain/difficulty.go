@@ -28,9 +28,9 @@ func getAdjustedDifficulty(chain BlockChain) (int, error) {
 
 	switch {
 	case actualTime < expectedTime/2:
-		return lower, nil
-	case actualTime > expectedTime*2:
 		return higher, nil
+	case actualTime > expectedTime*2:
+		return lower, nil
 	}
 	return chain.GetLast().Challenge.Difficulty, nil
 }

@@ -6,14 +6,14 @@ import (
 )
 
 func TestGetDifficultyLowered(t *testing.T) {
-	chain := computeChain(10, 3, BlockGenerationDefaultIntervalMillis*BlockGenerationDefaultIntervalMillis*2+1)
+	chain := computeChain(10, 3, BlockGenerationDefaultIntervalMillis*BlockGenerationDefaultIntervalMillis/20+1)
 	result, err := GetDifficulty(*chain)
 	assert.NoError(t, err)
 	assert.Less(t, result, 3)
 }
 
 func TestGetDifficultyUpped(t *testing.T) {
-	chain := computeChain(10, 3, BlockGenerationDefaultIntervalMillis*DifficultyAdjustmentInterval/2-1)
+	chain := computeChain(10, 3, BlockGenerationDefaultIntervalMillis*DifficultyAdjustmentInterval/20-1)
 	result, err := GetDifficulty(*chain)
 	assert.NoError(t, err)
 	assert.Greater(t, result, 3)
