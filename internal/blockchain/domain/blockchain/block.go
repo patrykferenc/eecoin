@@ -30,7 +30,7 @@ type BlockChain struct {
 }
 
 func (chain *BlockChain) NewBlock(timestamp int64, transactions []TransactionID, solved Challenge) (Block, error) {
-	if !solved.MatchesDifficulty() || !blockCreatedAfterPreviousWithinTimeCap(timestamp, solved, chain.GetLast()) {
+	if !solved.MatchesDifficulty() && !blockCreatedAfterPreviousWithinTimeCap(timestamp, solved, chain.GetLast()) {
 		return Block{}, BlockNotValid
 	}
 	previousHash := chain.Blocks[len(chain.Blocks)-1].ContentHash
@@ -47,10 +47,6 @@ func (chain *BlockChain) NewBlock(timestamp int64, transactions []TransactionID,
 	}
 	newBlock.ContentHash = contentHash
 	return *newBlock, nil
-}
-
-func blockCreatedAfterPreviousWithinTimeCap(timestamp int64, solved Challenge, latest Block) bool {
-	return timestamp-latest.TimestampMilis > solved.TimeCapMillis
 }
 
 func (chain *BlockChain) AddBlock(new Block) error {
@@ -99,6 +95,15 @@ func (chain *BlockChain) GetBlockByTransactionID(id TransactionID) (Block, error
 		}
 	}
 	return Block{}, BlockNotFound
+}
+
+func (chain *BlockChain) GetCumulativeDifficulty() int64 {
+	var sum int64 = 0
+	for _, block := range chain.Blocks {
+		sum += int64(intPow(block.Challenge.Difficulty, 2))
+
+	}
+	return sum
 }
 
 func ImportBlockchain(blocks []Block) (*BlockChain, error) {
@@ -164,4 +169,24 @@ func isValidBasedOnPrevious(newBlock Block, previous Block) bool {
 			blockCreatedAfterPreviousWithinTimeCap(newBlock.TimestampMilis, newBlock.Challenge, previous)
 	}
 	return false
+}
+
+func blockCreatedAfterPreviousWithinTimeCap(timestamp int64, solved Challenge, latest Block) bool {
+	return timestamp-latest.TimestampMilis >= solved.TimeCapMillis
+}
+
+func intPow(n, m int) int {
+	if m == 0 {
+		return 1
+	}
+
+	if m == 1 {
+		return n
+	}
+
+	result := n
+	for i := 2; i <= m; i++ {
+		result *= n
+	}
+	return result
 }

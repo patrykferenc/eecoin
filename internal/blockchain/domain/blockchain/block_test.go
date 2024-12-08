@@ -8,6 +8,7 @@ import (
 )
 
 func TestContentHash(t *testing.T) {
+	t.Parallel()
 	block := Block{
 		Index:          1,
 		TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 1).UnixMilli(),
@@ -19,6 +20,7 @@ func TestContentHash(t *testing.T) {
 	result, _ := CalculateHash(block)
 	assert.Equal(t, result, block.ContentHash)
 }
+
 func TestImportBlock_shouldError(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
@@ -53,7 +55,6 @@ func TestImportBlock_shouldError(t *testing.T) {
 		assertThat.Equal(tc.expectedErr, err)
 	}
 }
-
 func TestImportBlock_shouldWork(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)
@@ -84,13 +85,18 @@ func TestNewBlock(t *testing.T) {
 	// and given
 	timestamp := time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli()
 	transactions := make([]TransactionID, 0)
-	unsolvedChallenge := Challenge{TimeCapMillis: 60, Difficulty: 2}
+
+	// and given
+	solvedChallenge, err := NewChallenge(2, 2)
+	assertThat.Nil(err)
+	err = solvedChallenge.RollUntilMatchesDifficulty(genesis, timestamp)
+	assertThat.Nil(err)
 
 	// when
-	newBlock, err := chain.NewBlock(timestamp, transactions, unsolvedChallenge)
+	newBlock, err := chain.NewBlock(timestamp, transactions, solvedChallenge)
 
 	// then
-	assertThat.NotNil(err)
+	assertThat.Nil(err)
 	assertThat.NotNil(newBlock)
 }
 
@@ -105,7 +111,12 @@ func TestAddBlock_shouldWork(t *testing.T) {
 	// and given
 	timestamp := time.Date(2025, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 120).UnixMilli()
 	transactions := make([]TransactionID, 0)
-	solvedChallenge := Challenge{TimeCapMillis: 60, Difficulty: 2, HashValue: "AABK9//WeqnoWV+Kuzz6OHmhHooT7BVPmu10S/MALa8=", Nonce: 1284552930}
+
+	// and given
+	solvedChallenge, err := NewChallenge(2, 2)
+	assertThat.Nil(err)
+	err = solvedChallenge.RollUntilMatchesDifficulty(genesis, timestamp)
+	assertThat.Nil(err)
 
 	// and given new block
 	newBlock, err := chain.NewBlock(timestamp, transactions, solvedChallenge)
@@ -121,6 +132,64 @@ func TestAddBlock_shouldWork(t *testing.T) {
 	actual, err := chain.GetBlock(expectedIndex)
 	assertThat.Nil(err)
 	assertThat.Equal(newBlock, actual)
+}
+
+func TestBlockChain_GetCumulativeDifficulty(t *testing.T) {
+	t.Parallel()
+	assertThat := assert.New(t)
+
+	// given
+	genesis := GenerateGenesisBlock()
+	chainOne, err := ImportBlockchain([]Block{genesis})
+	assertThat.Nil(err)
+	chainTwo, err := ImportBlockchain([]Block{genesis})
+	assertThat.Nil(err)
+
+	// and given
+	timestamp := time.Date(2025, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 120).UnixMilli()
+	transactions := make([]TransactionID, 0)
+
+	// and given
+	solvedChallengeOne, err := NewChallenge(2, 2)
+	assertThat.Nil(err)
+	err = solvedChallengeOne.RollUntilMatchesDifficulty(genesis, timestamp)
+	assertThat.Nil(err)
+
+	// and given
+	solvedChallengeTwo, err := NewChallenge(3, 2)
+	assertThat.Nil(err)
+	err = solvedChallengeTwo.RollUntilMatchesDifficulty(genesis, timestamp)
+	assertThat.Nil(err)
+
+	// and given new block
+	newBlockOne, err := chainOne.NewBlock(timestamp, transactions, solvedChallengeOne)
+	assertThat.Nil(err)
+
+	newBlockTwo, err := chainTwo.NewBlock(timestamp, transactions, solvedChallengeTwo)
+	assertThat.Nil(err)
+
+	// and having added separate blocks to two chains
+	err = chainOne.AddBlock(newBlockOne)
+	assertThat.Nil(err)
+
+	err = chainTwo.AddBlock(newBlockTwo)
+	assertThat.Nil(err)
+
+	// when calculating third block to one of chains
+	solvedChallengeThree, err := NewChallenge(3, 2)
+	assertThat.Nil(err)
+
+	err = solvedChallengeThree.RollUntilMatchesDifficulty(chainTwo.GetLast(), timestamp+200)
+	assertThat.Nil(err)
+
+	newBlockThree, err := chainTwo.NewBlock(timestamp+200, transactions, solvedChallengeThree)
+	assertThat.Nil(err)
+
+	err = chainTwo.AddBlock(newBlockThree)
+	assertThat.Nil(err)
+
+	assertThat.Greater(chainTwo.GetCumulativeDifficulty(), chainOne.GetCumulativeDifficulty())
+	assertThat.Equal(chainTwo.GetCumulativeDifficulty(), int64(9+9))
 }
 
 func TestNewBlockWithAddBlock_shouldNotWork(t *testing.T) {
@@ -181,7 +250,7 @@ func TestNewBlockWithAddBlock_shouldNotWork(t *testing.T) {
 			},
 		},
 		{
-			description: "Invalid challenge target hash",
+			description: "Invalid challenge timestamp",
 			block: Block{
 				Index:          1,
 				TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 1).UnixMilli(),
