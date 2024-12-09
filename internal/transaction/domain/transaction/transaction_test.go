@@ -50,3 +50,23 @@ func TestCreatingTransaction(t *testing.T) {
 	// and are signed
 	assert.NotEmpty(tx.Inputs()[0].Signature())
 }
+
+func TestCreateCoinbase(t *testing.T) {
+	assert := assert.New(t)
+	// given some receiver
+	privateReceiver, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader) // only used to generate a public key
+	assert.NoError(err)
+	receiverAddr, err := x509.MarshalPKIXPublicKey(privateReceiver.Public()) // this is the node's miner address
+
+	// when
+	tx, err := transaction.NewCoinbase(string(receiverAddr), 1)
+	assert.NoError(err)
+
+	// then
+	assert.NotNil(tx)
+	assert.NotNil(tx.ID())
+	assert.Len(tx.Inputs(), 1)
+	assert.Len(tx.Outputs(), 1)
+	assert.Equal(100, tx.Outputs()[0].Amount())
+	assert.Equal(string(receiverAddr), tx.Outputs()[0].Address())
+}
