@@ -13,6 +13,14 @@ type Input struct {
 	signature   string // TODO#30 signature struct
 }
 
+func NewInput(outputID ID, outputIndex int, signature string) Input {
+	return Input{
+		outputID:    outputID,
+		outputIndex: outputIndex,
+		signature:   signature,
+	}
+}
+
 func (i *Input) sign(signer crypto.Signer, idToSign ID, referencedOutput UnspentOutput) error {
 	ourAddress, err := x509.MarshalPKIXPublicKey(signer.Public())
 	if err != nil {
