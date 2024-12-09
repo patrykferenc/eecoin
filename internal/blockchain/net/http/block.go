@@ -24,14 +24,6 @@ func postBlock(addBlockHandler command.AddBlockHandler) http.HandlerFunc {
 			transactions[i] = blockchain.TransactionID(tx)
 		}
 
-		_ = blockchain.Block{
-			Index:          dto.Index,
-			TimestampMilis: dto.TimestampMilis,
-			ContentHash:    dto.ContentHash,
-			PrevHash:       dto.PrevHash,
-			Transactions:   transactions,
-		}
-
 		if err := addBlockHandler.Handle(command.AddBlock{
 			ToAdd: blockchain.Block{
 				Index:          dto.Index,
