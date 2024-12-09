@@ -32,12 +32,12 @@ func setupCliCommands() []*cli.Command {
 				configPath := c.Args().Get(0)
 				passphrase := c.Args().Get(1)
 
-				wl, _ := wallet.ReadWalletFromDirectory(configPath, &passphrase)
+				wl, _ := wallet.ReadWalletFromDirectoryRsa(configPath, &passphrase)
 				if wl.MainId == nil {
 					mainId, _ := wallet.NewRsaKey()
 					_ = wl.SetMainIdentity(&mainId)
 				}
-				return wl.ExportWallet(configPath, &passphrase)
+				return wl.ExportWalletRsa(configPath, &passphrase)
 			},
 		},
 		{
@@ -51,10 +51,10 @@ func setupCliCommands() []*cli.Command {
 				configPath := c.Args().Get(0)
 				passphrase := c.Args().Get(1)
 
-				wl, _ := wallet.ReadWalletFromDirectory(configPath, &passphrase)
+				wl, _ := wallet.ReadWalletFromDirectoryRsa(configPath, &passphrase)
 				newKey, _ := wallet.NewRsaKey()
 				_ = wl.Add(newKey)
-				err := wl.ExportWallet(configPath, &passphrase)
+				err := wl.ExportWalletRsa(configPath, &passphrase)
 				return err
 			},
 		},
@@ -68,7 +68,7 @@ func setupCliCommands() []*cli.Command {
 				}
 				configPath := c.Args().Get(0)
 				passphrase := c.Args().Get(1)
-				wl, _ := wallet.ReadWalletFromDirectory(configPath, &passphrase)
+				wl, _ := wallet.ReadWalletFromDirectoryRsa(configPath, &passphrase)
 				for k, v := range wl.Keys {
 					fmt.Printf("pub: %s | private %t\n", k, v.Present)
 				}

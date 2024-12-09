@@ -7,7 +7,7 @@ import (
 
 func TestEncryptDecrypt(t *testing.T) {
 	mainId, _ := NewRsaKey()
-	resultToPem := PrivateToPem(mainId)
+	resultToPem := PrivateToPemRsa(mainId)
 
 	encrypted := Encrypt("dupa", resultToPem)
 	decrypted := Decrypt("dupa", encrypted)
