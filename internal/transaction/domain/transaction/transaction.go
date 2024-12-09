@@ -42,7 +42,7 @@ type Transaction struct {
 	outputs []*Output
 }
 
-func newFrom(inputs []*Input, outputs []*Output) (*Transaction, error) {
+func NewFrom(inputs []*Input, outputs []*Output) (*Transaction, error) {
 	id, err := newID(inputs, outputs)
 	if err != nil {
 		return nil, fmt.Errorf("error creating transaction ID: %w", err)
@@ -87,13 +87,13 @@ func New(receiverAddr string, senderAddr string, amount int, pk crypto.Signer, u
 	}
 
 	outputs := generateOutputsFor(amount, leftover, senderAddr, receiverAddr)
-	tx, err := newFrom(inputs, outputs)
+	tx, err := NewFrom(inputs, outputs)
 	if err != nil {
 		return nil, fmt.Errorf("error creating transaction: %w", err)
 	}
 
 	for i, in := range tx.inputs {
-		err := in.sign(pk, tx.id, *included[i])
+		err := in.sign(pk, tx.id, included[i])
 		if err != nil {
 			return nil, fmt.Errorf("error signing input: %w", err)
 		}

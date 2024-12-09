@@ -10,8 +10,16 @@ type UnspentOutput struct {
 	address     string // TODO#30
 }
 
-func NewUnspentOutput(outputID ID, outputIndex int, amount int, address string) *UnspentOutput {
-	return &UnspentOutput{
+func (o UnspentOutput) OutputID() ID {
+	return o.outputID
+}
+
+func (o UnspentOutput) Address() string {
+	return o.address
+}
+
+func NewUnspentOutput(outputID ID, outputIndex int, amount int, address string) UnspentOutput {
+	return UnspentOutput{
 		outputID:    outputID,
 		outputIndex: outputIndex,
 		amount:      amount,
@@ -19,7 +27,7 @@ func NewUnspentOutput(outputID ID, outputIndex int, amount int, address string) 
 	}
 }
 
-func (o *UnspentOutput) AsInput() *Input {
+func (o UnspentOutput) AsInput() *Input {
 	return &Input{
 		outputID:    o.outputID,
 		outputIndex: o.outputIndex,
@@ -27,10 +35,12 @@ func (o *UnspentOutput) AsInput() *Input {
 }
 
 type UnspentOutputRepository interface {
-	GetByAddress(address string) ([]*UnspentOutput, error)
+	GetAll() ([]UnspentOutput, error)
+	GetByAddress(address string) ([]UnspentOutput, error)
+	Set(unspentOutputs []UnspentOutput) error
 }
 
-func calculateUnspentForAmount(unspentOutputs []*UnspentOutput, amount int) (leftover int, included []*UnspentOutput, err error) {
+func calculateUnspentForAmount(unspentOutputs []UnspentOutput, amount int) (leftover int, included []UnspentOutput, err error) {
 	currentAmount := 0
 	for _, unspentOutput := range unspentOutputs {
 		if currentAmount >= amount {

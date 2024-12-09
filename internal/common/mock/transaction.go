@@ -1,15 +1,34 @@
 package mock
 
-import "github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+import (
+	"fmt"
+
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+)
 
 type UnspentOutputRepository struct {
 	Called         int
-	UnspentOutputs map[string][]*transaction.UnspentOutput
+	UnspentOutputs map[string][]transaction.UnspentOutput
 }
 
-func (r *UnspentOutputRepository) GetByAddress(address string) ([]*transaction.UnspentOutput, error) {
+func (r *UnspentOutputRepository) GetByAddress(address string) ([]transaction.UnspentOutput, error) {
 	r.Called++
 	return r.UnspentOutputs[address], nil
+}
+
+func (r *UnspentOutputRepository) GetAll() ([]transaction.UnspentOutput, error) {
+	r.Called++
+	var uos []transaction.UnspentOutput
+	for _, outputs := range r.UnspentOutputs {
+		for _, output := range outputs {
+			uos = append(uos, output)
+		}
+	}
+	return uos, nil
+}
+
+func (r *UnspentOutputRepository) Set(_ []transaction.UnspentOutput) error {
+	panic("not implemented")
 }
 
 type PoolRepository struct {
@@ -37,13 +56,22 @@ func (r *PoolRepository) Remove(ids ...transaction.ID) error {
 	return nil
 }
 
-func (r *PoolRepository) GetAll() []*transaction.Transaction {
+func (r *PoolRepository) GetAll() []transaction.Transaction {
 	r.Called++
-	var txs []*transaction.Transaction
+	var txs []transaction.Transaction
 	for _, tx := range r.Transactions {
-		txs = append(txs, tx)
+		txs = append(txs, *tx)
 	}
 	return txs
+}
+
+func (r *PoolRepository) Get(id transaction.ID) (*transaction.Transaction, error) {
+	r.Called++
+	tx, ok := r.Transactions[id]
+	if !ok {
+		return nil, fmt.Errorf("transaction with ID %s not found", id)
+	}
+	return tx, nil
 }
 
 func NewPoolRepository() *PoolRepository {

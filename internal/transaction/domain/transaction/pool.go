@@ -3,8 +3,9 @@ package transaction
 type PoolRepository interface {
 	Add(*Transaction) error
 	Exists(ID) bool
+	Get(ID) (*Transaction, error)
 	Remove(...ID) error
-	GetAll() []*Transaction
+	GetAll() []Transaction
 }
 
 type Pool struct {
@@ -25,6 +26,10 @@ func (p *Pool) Add(tx *Transaction) error {
 
 func (p *Pool) Exists(id ID) bool {
 	return p.pool.Exists(id)
+}
+
+func (p *Pool) Get(id ID) (*Transaction, error) {
+	return p.pool.Get(id)
 }
 
 func (p *Pool) Update(unspent []UnspentOutput) error {

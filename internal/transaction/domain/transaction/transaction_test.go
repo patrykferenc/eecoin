@@ -29,7 +29,7 @@ func TestCreatingTransaction(t *testing.T) {
 	// and given unspent outputs
 	someTransaction, err := transaction.NewGenesis(string(senderAddr), 100)
 	assert.NoError(err)
-	unspentOutputs := map[string][]*transaction.UnspentOutput{
+	unspentOutputs := map[string][]transaction.UnspentOutput{
 		string(senderAddr): {transaction.NewUnspentOutput(someTransaction.ID(), 0, 100, string(senderAddr))},
 	}
 	unspentOutputRepo := &mock.UnspentOutputRepository{
