@@ -89,7 +89,7 @@ func TestNewBlock(t *testing.T) {
 	// and given
 	solvedChallenge, err := NewChallenge(2, 2)
 	assertThat.Nil(err)
-	err = solvedChallenge.RollUntilMatchesDifficulty(genesis, timestamp)
+	err = solvedChallenge.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
 	assertThat.Nil(err)
 
 	// when
@@ -115,7 +115,7 @@ func TestAddBlock_shouldWork(t *testing.T) {
 	// and given
 	solvedChallenge, err := NewChallenge(2, 2)
 	assertThat.Nil(err)
-	err = solvedChallenge.RollUntilMatchesDifficulty(genesis, timestamp)
+	err = solvedChallenge.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
 	assertThat.Nil(err)
 
 	// and given new block
@@ -152,13 +152,13 @@ func TestBlockChain_GetCumulativeDifficulty(t *testing.T) {
 	// and given
 	solvedChallengeOne, err := NewChallenge(2, 2)
 	assertThat.Nil(err)
-	err = solvedChallengeOne.RollUntilMatchesDifficulty(genesis, timestamp)
+	err = solvedChallengeOne.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
 	assertThat.Nil(err)
 
 	// and given
 	solvedChallengeTwo, err := NewChallenge(3, 2)
 	assertThat.Nil(err)
-	err = solvedChallengeTwo.RollUntilMatchesDifficulty(genesis, timestamp)
+	err = solvedChallengeTwo.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
 	assertThat.Nil(err)
 
 	// and given new block
@@ -179,7 +179,7 @@ func TestBlockChain_GetCumulativeDifficulty(t *testing.T) {
 	solvedChallengeThree, err := NewChallenge(3, 2)
 	assertThat.Nil(err)
 
-	err = solvedChallengeThree.RollUntilMatchesDifficulty(chainTwo.GetLast(), timestamp+200)
+	err = solvedChallengeThree.RollUntilMatchesDifficulty(chainTwo.GetLast(), transactions, timestamp+200)
 	assertThat.Nil(err)
 
 	newBlockThree, err := chainTwo.NewBlock(timestamp+200, transactions, solvedChallengeThree)
