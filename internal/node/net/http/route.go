@@ -7,7 +7,7 @@ import (
 )
 
 func Route(r chi.Router, acceptClient command.AcceptClientMessageHandler, accept command.AcceptMessageHandler, chain query.GetChain) {
-	r.Post("/client/message", postClientMessage(acceptClient))
-	r.Post("/transaction", postTransaction(accept))
+	r.Post("/v0/client/message", postClientMessage(acceptClient))
+	r.Post("/v0/transaction", postTransaction(accept))
 	r.Get("/chain", getChain(chain))
 }

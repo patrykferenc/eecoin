@@ -21,6 +21,10 @@ func getUnspent(q query.GetUnspentOutputs) http.HandlerFunc {
 
 		// Respond with unspent outputs
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(oo)
+		if err := json.NewEncoder(w).Encode(oo); err != nil {
+			slog.Warn("failed to encode unspent outputs", "error", err)
+			http.Error(w, "failed to encode unspent outputs", http.StatusInternalServerError)
+			return
+		}
 	}
 }

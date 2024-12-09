@@ -11,12 +11,17 @@ import (
 
 type unspentOutputsRepository struct {
 	client http.Client
+	remote string
+}
+
+func NewUnspentOutputsRepository(client http.Client, remote string) transaction.UnspentOutputRepository {
+	return &unspentOutputsRepository{client: client, remote: remote}
 }
 
 func (u *unspentOutputsRepository) GetAll() ([]transaction.UnspentOutput, error) {
 	var dto query.UnspentOutputs
 
-	resp, err := u.client.Get("/unspent")
+	resp, err := u.client.Get(u.remote + unspentURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get unspent outputs: %w", err)
 	}

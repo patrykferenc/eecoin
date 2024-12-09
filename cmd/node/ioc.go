@@ -13,12 +13,15 @@ import (
 	nodedomain "github.com/patrykferenc/eecoin/internal/node/domain/node"
 	nodehttp "github.com/patrykferenc/eecoin/internal/node/net/http"
 	"github.com/patrykferenc/eecoin/internal/peer"
+	"github.com/patrykferenc/eecoin/internal/transaction"
+	transactioninmem "github.com/patrykferenc/eecoin/internal/transaction/inmem"
 )
 
 type Container struct {
-	nodeComponent       *node.Component
-	peerComponent       *peer.Component
-	blockChainComponent *blockchain.Component
+	nodeComponent        *node.Component
+	peerComponent        *peer.Component
+	blockChainComponent  *blockchain.Component
+	transactionComponent *transaction.Component
 
 	broker *event.ChannelBroker
 }
@@ -55,10 +58,14 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 
 	blockChainComponent := blockchain.NewComponent(seenRepo, peerComponent.Queries.GetPeers)
 
+	poolRepo := transactioninmem.NewPoolRepository()
+	tranasactionComponent := transaction.NewComponent(broker, poolRepo, peerComponent.Queries.GetPeers)
+
 	return &Container{
-		peerComponent:       &peerComponent,
-		nodeComponent:       &nodeComponent,
-		blockChainComponent: &blockChainComponent,
+		peerComponent:        &peerComponent,
+		nodeComponent:        &nodeComponent,
+		blockChainComponent:  &blockChainComponent,
+		transactionComponent: &tranasactionComponent,
 
 		broker: broker,
 	}, nil

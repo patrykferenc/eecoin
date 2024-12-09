@@ -46,6 +46,10 @@ type getUnspentOutputs struct {
 	repo transaction.UnspentOutputRepository
 }
 
+func NewGetUnspentOutputs(repo transaction.UnspentOutputRepository) GetUnspentOutputs {
+	return &getUnspentOutputs{repo: repo}
+}
+
 func (g *getUnspentOutputs) Get() (UnspentOutputs, error) {
 	oo, err := g.repo.GetAll()
 	if err != nil {
