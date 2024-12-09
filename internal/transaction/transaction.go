@@ -20,6 +20,7 @@ type Component struct {
 type Queries struct {
 	GetUnspentOutputs  query.GetUnspentOutputs
 	GetTransactionPool query.GetTransactionPool
+	GetBalance         query.GetBalance
 }
 
 type Commands struct {
@@ -48,11 +49,10 @@ func NewComponent(
 	)
 	unspent := inmem.NewUnspentOutputRepository()
 	getUnspent := query.NewGetUnspentOutputs(unspent)
+	getBalance := query.NewGetBalance(unspent)
 
 	unspentClient := http.NewUnspentOutputsRepository("noop")
-
 	poolClient := &http.TransactionPoolClient{}
-
 	updater := application.NewTransactionUpdater(
 		poolRepository,
 		poolClient,
@@ -65,6 +65,7 @@ func NewComponent(
 		Queries: Queries{
 			GetUnspentOutputs:  getUnspent,
 			GetTransactionPool: poolRepository,
+			GetBalance:         getBalance,
 		},
 		Commands: Commands{
 			AddTransactionHandler:       add,
