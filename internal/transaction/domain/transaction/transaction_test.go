@@ -57,6 +57,7 @@ func TestCreateCoinbase(t *testing.T) {
 	privateReceiver, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader) // only used to generate a public key
 	assert.NoError(err)
 	receiverAddr, err := x509.MarshalPKIXPublicKey(privateReceiver.Public()) // this is the node's miner address
+	assert.NoError(err)
 
 	// when
 	tx, err := transaction.NewCoinbase(string(receiverAddr), 1)
