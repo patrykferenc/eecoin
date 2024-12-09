@@ -21,12 +21,8 @@ func TestNewChallenge_shouldError(t *testing.T) {
 			difficulty:  1,
 		},
 		{
-			description: "Difficulty too big and not even",
-			difficulty:  65,
-		},
-		{
 			description: "Difficulty too big",
-			difficulty:  66,
+			difficulty:  257,
 		},
 	}
 
@@ -101,7 +97,7 @@ func TestChallengeMatchesDifficulty_shouldMatch(t *testing.T) {
 	assertThat := assert.New(t)
 
 	// given
-	challangeHashStr := base64.StdEncoding.EncodeToString([]byte{0, 0, 0, 0, 1})
+	challangeHashStr := base64.StdEncoding.EncodeToString([]byte{0})
 	challenge := Challenge{Difficulty: 4, HashValue: challangeHashStr}
 
 	// then
