@@ -2,10 +2,12 @@ package transaction
 
 import (
 	"github.com/patrykferenc/eecoin/internal/common/event"
-	"github.com/patrykferenc/eecoin/internal/peer/query"
+	peerquery "github.com/patrykferenc/eecoin/internal/peer/query"
 	"github.com/patrykferenc/eecoin/internal/transaction/command"
 	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+	"github.com/patrykferenc/eecoin/internal/transaction/inmem"
 	"github.com/patrykferenc/eecoin/internal/transaction/net/http"
+	"github.com/patrykferenc/eecoin/internal/transaction/query"
 )
 
 type Component struct {
@@ -13,7 +15,9 @@ type Component struct {
 	Commands Commands
 }
 
-type Queries struct{}
+type Queries struct {
+	GetUnspentOutputs query.GetUnspentOutputs
+}
 
 type Commands struct {
 	BroadcastTransactionHandler command.BroadcastTransactionHandler
@@ -23,7 +27,7 @@ type Commands struct {
 func NewComponent(
 	publisher event.Publisher,
 	poolRepository transaction.PoolRepository,
-	getPeers query.GetPeers,
+	getPeers peerquery.GetPeers,
 ) Component {
 	pool := transaction.NewPool(poolRepository)
 	add := command.NewAddTransactionHandler(
@@ -35,8 +39,12 @@ func NewComponent(
 		pool,
 		broadcaster,
 	)
+	unspent := inmem.NewUnspentOutputRepository()
+	getUnspent := query.NewGetUnspentOutputs(unspent)
 	return Component{
-		Queries: Queries{},
+		Queries: Queries{
+			GetUnspentOutputs: getUnspent,
+		},
 		Commands: Commands{
 			AddTransactionHandler:       add,
 			BroadcastTransactionHandler: broadcast,

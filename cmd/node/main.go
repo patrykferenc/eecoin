@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
 
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 
@@ -21,6 +22,7 @@ import (
 	peercntr "github.com/patrykferenc/eecoin/internal/peer"
 	peercommand "github.com/patrykferenc/eecoin/internal/peer/command"
 	peerhttp "github.com/patrykferenc/eecoin/internal/peer/net/http"
+	transactionhttp "github.com/patrykferenc/eecoin/internal/transaction/net/http"
 )
 
 func main() {
@@ -81,6 +83,7 @@ func listenAndServe(container *Container) error {
 	peerhttp.Route(r, container.peerComponent.Commands.AcceptPing)
 	nodehttp.Route(r, container.nodeComponent.Commands.AcceptClientMessage, container.nodeComponent.Commands.AcceptMessage, container.nodeComponent.Queries.GetChain)
 	blockchainHttp.Route(r, container.blockChainComponent.Commands.AddBlock)
+	transactionhttp.Route(r, container.transactionComponent.Commands.AddTransactionHandler, container.transactionComponent.Queries.GetUnspentOutputs)
 
 	slog.Info("Listening on :22137")
 	return http.ListenAndServe(":22137", r)
