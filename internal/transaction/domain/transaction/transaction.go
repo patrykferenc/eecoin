@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+const COINBASE_AMOUNT = 100
+
 // ID is the transaction ID, represented as a base64 string
 type ID string
 
@@ -115,6 +117,27 @@ func NewGenesis(receiverAddr string, amount int) (*Transaction, error) {
 	inputs := []*Input{}
 	outputs := []*Output{
 		NewOutput(amount, receiverAddr),
+	}
+
+	id, err := newID(inputs, outputs)
+	if err != nil {
+		return nil, fmt.Errorf("error creating transaction ID: %w", err)
+	}
+
+	return &Transaction{
+		id:      id,
+		inputs:  inputs,
+		outputs: outputs,
+	}, nil
+}
+
+func NewCoinbase(receiverAddr string, blockHeight int) (*Transaction, error) {
+	in := NewInput("", blockHeight, "")
+	inputs := []*Input{
+		&in,
+	}
+	outputs := []*Output{
+		NewOutput(COINBASE_AMOUNT, receiverAddr),
 	}
 
 	id, err := newID(inputs, outputs)
