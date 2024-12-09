@@ -5,6 +5,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/x509"
+	"encoding/hex"
 	"testing"
 
 	"github.com/patrykferenc/eecoin/internal/common/mock"
@@ -17,14 +18,16 @@ func TestCreatingTransaction(t *testing.T) {
 	// given sender
 	privateSender, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	assert.NoError(err)
-	senderAddr, err := x509.MarshalPKIXPublicKey(privateSender.Public())
+	senderAddrRaw, err := x509.MarshalPKIXPublicKey(privateSender.Public())
 	assert.NoError(err)
+	senderAddr := hex.EncodeToString(senderAddrRaw)
 
 	// and given receiver
 	privateReceiver, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader) // only used to generate a public key
 	assert.NoError(err)
-	receiverAddr, err := x509.MarshalPKIXPublicKey(privateReceiver.Public())
+	receiverAddrRaw, err := x509.MarshalPKIXPublicKey(privateReceiver.Public())
 	assert.NoError(err)
+	receiverAddr := hex.EncodeToString(receiverAddrRaw)
 
 	// and given unspent outputs
 	someTransaction, err := transaction.NewGenesis(string(senderAddr), 100)
@@ -56,8 +59,9 @@ func TestCreateCoinbase(t *testing.T) {
 	// given some receiver
 	privateReceiver, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader) // only used to generate a public key
 	assert.NoError(err)
-	receiverAddr, err := x509.MarshalPKIXPublicKey(privateReceiver.Public()) // this is the node's miner address
+	receiverAddrRaw, err := x509.MarshalPKIXPublicKey(privateReceiver.Public()) // this is the node's miner address
 	assert.NoError(err)
+	receiverAddr := hex.EncodeToString(receiverAddrRaw)
 
 	// when
 	tx, err := transaction.NewCoinbase(string(receiverAddr), 1)

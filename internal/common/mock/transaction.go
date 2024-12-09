@@ -29,6 +29,18 @@ func (r *UnspentOutputRepository) Set(_ []transaction.UnspentOutput) error {
 	panic("not implemented")
 }
 
+func (r *UnspentOutputRepository) GetByOutputIDAndIndex(outputID transaction.ID, outputIndex int) (transaction.UnspentOutput, error) {
+	r.Called++
+	for _, outputs := range r.UnspentOutputs {
+		for _, output := range outputs {
+			if output.OutputID() == outputID && output.OutputIndex() == outputIndex {
+				return output, nil
+			}
+		}
+	}
+	return transaction.UnspentOutput{}, fmt.Errorf("output with ID %s and index %d not found", outputID, outputIndex)
+}
+
 type PoolRepository struct {
 	Called       int
 	Transactions map[transaction.ID]*transaction.Transaction

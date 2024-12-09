@@ -36,6 +36,21 @@ func (r *UnspentOutputRepository) GetByAddress(address string) ([]transaction.Un
 	return r.outputs[address], nil
 }
 
+func (r *UnspentOutputRepository) GetByOutputIDAndIndex(outputID transaction.ID, outputIndex int) (transaction.UnspentOutput, error) {
+	r.rw.RLock()
+	defer r.rw.RUnlock()
+
+	for _, outputs := range r.outputs {
+		for _, output := range outputs {
+			if output.OutputID() == outputID && output.OutputIndex() == outputIndex {
+				return output, nil
+			}
+		}
+	}
+
+	return transaction.UnspentOutput{}, nil
+}
+
 func (r *UnspentOutputRepository) Set(outputs []transaction.UnspentOutput) error {
 	r.rw.Lock()
 	defer r.rw.Unlock()

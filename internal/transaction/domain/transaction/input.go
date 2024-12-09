@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/x509"
+	"encoding/hex"
 	"fmt"
 )
 
@@ -26,7 +27,7 @@ func (i *Input) sign(signer crypto.Signer, idToSign ID, referencedOutput Unspent
 	if err != nil {
 		return fmt.Errorf("error marshalling public key: %w", err)
 	}
-	if string(ourAddress) != referencedOutput.address {
+	if hex.EncodeToString(ourAddress) != referencedOutput.address {
 		return fmt.Errorf("output address does not match the signer address")
 	}
 
