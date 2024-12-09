@@ -22,9 +22,9 @@ type Challenge struct {
 	TimeCapMillis int64
 }
 
-func (c *Challenge) RollNonce(previousBlock Block, currentTimestampMillis int64) error {
+func (c *Challenge) RollNonce(previousBlock Block, transactionData []TransactionID, currentTimestampMillis int64) error {
 	newNonce := rand.Uint32()
-	targetHash, err := calculateTargetHash(previousBlock, currentTimestampMillis, newNonce)
+	targetHash, err := calculateTargetHash(previousBlock, transactionData, currentTimestampMillis, newNonce)
 	if err != nil {
 		return err
 	}
@@ -49,9 +49,9 @@ func (c *Challenge) MatchesDifficulty() bool {
 	return true
 }
 
-func (c *Challenge) RollUntilMatchesDifficulty(previousBlock Block, currentTimestampMillis int64) error {
+func (c *Challenge) RollUntilMatchesDifficulty(previousBlock Block, transactionData []TransactionID, currentTimestampMillis int64) error {
 	for i := 0; !c.MatchesDifficulty(); i++ {
-		err := c.RollNonce(previousBlock, currentTimestampMillis)
+		err := c.RollNonce(previousBlock, transactionData, currentTimestampMillis)
 		if err != nil {
 			return err
 		}
@@ -59,9 +59,9 @@ func (c *Challenge) RollUntilMatchesDifficulty(previousBlock Block, currentTimes
 	return nil
 }
 
-func (c *Challenge) RollUntilMatchesDifficultyCapped(maxIterations int, previousBlock Block, currentTimestampMillis int64) error {
+func (c *Challenge) RollUntilMatchesDifficultyCapped(maxIterations int, previousBlock Block, transactionData []TransactionID, currentTimestampMillis int64) error {
 	for i := 0; i < maxIterations || !c.MatchesDifficulty(); i++ {
-		err := c.RollNonce(previousBlock, currentTimestampMillis)
+		err := c.RollNonce(previousBlock, transactionData, currentTimestampMillis)
 		if err != nil {
 			return err
 		}
@@ -79,19 +79,18 @@ func NewChallenge(difficulty int, timeCapMillis int64) (Challenge, error) {
 	return Challenge{}, NotValidDifficulty
 }
 
-func Verify(previous Block, latestBlockTimestamp int64, latestSolvedChallengeNonce uint32, latestSolvedChallengeHashValue string) bool {
-	validHash, err := calculateTargetHash(previous, latestBlockTimestamp, latestSolvedChallengeNonce)
+func Verify(previous Block, latestBlockTimestamp int64, latestSolvedChallengeNonce uint32, latestSolvedChallengeHashValue string, latestBlockData []TransactionID) bool {
+	validHash, err := calculateTargetHash(previous, latestBlockData, latestBlockTimestamp, latestSolvedChallengeNonce)
 	if err != nil || validHash != latestSolvedChallengeHashValue {
 		return false
 	}
 	return true
 }
 
-func calculateTargetHash(previousBlock Block, currentTimestampMillis int64, nonce uint32) (string, error) {
+func calculateTargetHash(previousBlock Block, transactions []TransactionID, currentTimestampMillis int64, nonce uint32) (string, error) {
 	var allBytes []byte
 	nextIndex := previousBlock.Index + 1
 	previousHash := previousBlock.ContentHash
-	previousBlockData := previousBlock.Transactions
 
 	nonceByteBuffer := make([]byte, 4)
 	binary.LittleEndian.PutUint32(nonceByteBuffer, nonce)
@@ -106,7 +105,7 @@ func calculateTargetHash(previousBlock Block, currentTimestampMillis int64, nonc
 
 	var previousBlockDataBuffer bytes.Buffer
 	enc := gob.NewEncoder(&previousBlockDataBuffer)
-	if err := enc.Encode(previousBlockData); err != nil {
+	if err := enc.Encode(transactions); err != nil {
 		return "", err
 	}
 

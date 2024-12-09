@@ -165,7 +165,7 @@ func isValidBasedOnPrevious(newBlock Block, previous Block) bool {
 	contentHash, _ := CalculateHash(newBlock)
 	if contentHash == newBlock.ContentHash {
 		return newBlock.Index == previous.Index+1 && newBlock.PrevHash == previous.ContentHash &&
-			Verify(previous, newBlock.TimestampMilis, newBlock.Challenge.Nonce, newBlock.Challenge.HashValue) &&
+			Verify(previous, newBlock.TimestampMilis, newBlock.Challenge.Nonce, newBlock.Challenge.HashValue, newBlock.Transactions) &&
 			blockCreatedAfterPreviousWithinTimeCap(newBlock.TimestampMilis, newBlock.Challenge, previous)
 	}
 	return false

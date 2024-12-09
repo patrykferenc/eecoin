@@ -23,9 +23,11 @@ func computeChain(elements, fixedDifficulty int, fixedTimecapOfChallenges int64)
 	genesisBlock := GenerateGenesisBlock()
 	timestamp := genesisBlock.TimestampMilis
 	chain, _ := ImportBlockchain([]Block{genesisBlock})
+	transactions := make([]TransactionID, 0)
+
 	for i := 1; i < elements+1; i++ {
 		challenge, _ := NewChallenge(fixedDifficulty, fixedTimecapOfChallenges)
-		_ = challenge.RollUntilMatchesDifficulty(chain.GetLast(), timestamp+int64(i)*fixedTimecapOfChallenges)
+		_ = challenge.RollUntilMatchesDifficulty(chain.GetLast(), transactions, timestamp+int64(i)*fixedTimecapOfChallenges)
 		block, _ := chain.NewBlock(timestamp+int64(i)*fixedTimecapOfChallenges, []TransactionID{}, challenge)
 		_ = chain.AddBlock(block)
 	}

@@ -75,6 +75,7 @@ func TestRollNonce(t *testing.T) {
 	// given
 	challenge, err := NewChallenge(2, 60)
 	assertThat.Nil(err)
+	transactions := make([]TransactionID, 0)
 
 	// and given
 	initialNonce := challenge.Nonce
@@ -84,7 +85,7 @@ func TestRollNonce(t *testing.T) {
 	prePreparedBlock := GenerateGenesisBlock()
 
 	// when
-	err = challenge.RollNonce(prePreparedBlock, 60)
+	err = challenge.RollNonce(prePreparedBlock, transactions, 60)
 
 	// then
 	assertThat.Nil(err)
@@ -136,12 +137,13 @@ func TestRollUntil(t *testing.T) {
 	challenge, _ := NewChallenge(2, 60)
 	initialNonce := challenge.Nonce
 	initialHash := challenge.HashValue
+	transactions := make([]TransactionID, 0)
 
 	// and given
 	prePreparedBlock := GenerateGenesisBlock()
 
 	// when
-	err := challenge.RollUntilMatchesDifficultyCapped(2, prePreparedBlock, 60)
+	err := challenge.RollUntilMatchesDifficultyCapped(2, prePreparedBlock, transactions, 60)
 
 	// then
 	assertThat.Nil(err)
