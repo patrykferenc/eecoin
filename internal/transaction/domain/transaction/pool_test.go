@@ -25,3 +25,7 @@ func TestPool(t *testing.T) {
 	// and exists
 	assert.True(pool.Exists(tx.ID()))
 }
+
+func TestUpdatePool(t *testing.T) {
+	t.Skipf("TODO#30")
+}
