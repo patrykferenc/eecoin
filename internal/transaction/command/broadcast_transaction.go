@@ -10,6 +10,7 @@ type BroadcastTransaction struct {
 	TransactionID string
 }
 
+// BroadcastTransactionHandler broadcasts the transaction in the mempool to the network
 type BroadcastTransactionHandler interface {
 	Handle(BroadcastTransaction) error
 }

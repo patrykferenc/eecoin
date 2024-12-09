@@ -23,9 +23,7 @@ func (r *UnspentOutputRepository) GetAll() ([]transaction.UnspentOutput, error) 
 
 	var uos []transaction.UnspentOutput
 	for _, outputs := range r.outputs {
-		for _, output := range outputs {
-			uos = append(uos, output)
-		}
+		uos = append(uos, outputs...)
 	}
 
 	return uos, nil

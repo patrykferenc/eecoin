@@ -34,3 +34,11 @@ func (i *Input) sign(signer crypto.Signer, idToSign ID, referencedOutput Unspent
 func (i Input) Signature() string {
 	return i.signature
 }
+
+func (i Input) OutputID() ID {
+	return i.outputID
+}
+
+func (i Input) OutputIndex() int {
+	return i.outputIndex
+}

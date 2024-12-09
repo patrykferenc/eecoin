@@ -59,27 +59,12 @@ func (b *Broadcaster) Broadcast(tx transaction.Transaction) error {
 	for range peers {
 		err := <-errors
 		if err != nil {
-			slog.Warn("could not broadcast block", "error", err)
+			slog.Warn("could not broadcast transaction", "error", err)
 		}
 	}
 
 	return nil // todo: return error if all peers failed
 }
-
-// type Transaction struct {
-// 	id      ID
-// 	inputs  []*Input
-// 	outputs []*Output
-// }
-// type Input struct {
-// 	outputID    ID
-// 	outputIndex int
-// 	signature   string // TODO#30 signature struct
-// }
-// type Output struct {
-// 	amount  int
-// 	address string // TODO#30 address struct?
-// }
 
 type inputDTO struct {
 	OutputID    string `json:"output_id"`

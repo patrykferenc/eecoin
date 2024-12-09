@@ -68,6 +68,15 @@ func (t Transaction) Inputs() []Input {
 	return ii
 }
 
+// Outputs() returns immutable slice of outputs
+func (t Transaction) Outputs() []Output {
+	oo := make([]Output, len(t.outputs))
+	for i, out := range t.outputs {
+		oo[i] = *out
+	}
+	return oo
+}
+
 // TODO#30 - address can be taken from signer
 func New(receiverAddr string, senderAddr string, amount int, pk crypto.Signer, unspentOutputRepository UnspentOutputRepository) (*Transaction, error) {
 	unspentOutputs, err := unspentOutputRepository.GetByAddress(senderAddr)

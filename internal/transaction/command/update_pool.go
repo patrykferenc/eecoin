@@ -8,6 +8,7 @@ import (
 
 type UpdatePool struct{}
 
+// UpdatePoolHandler updates the pool with the latest unspent outputs
 type UpdatePoolHandler interface {
 	Handle(cmd UpdatePool) error
 }
