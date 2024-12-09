@@ -27,6 +27,7 @@ type addBlockHandler struct {
 
 type BlockChainRepository interface { // TODO#30 make not public, refactor to not return the blockchain as a whole (unsafe to read)
 	GetChain() blockchain.BlockChain
+	PutBlock(block blockchain.Block) error
 }
 
 func (h *addBlockHandler) Handle(command AddBlock) error {

@@ -1,18 +1,18 @@
 package main
 
 import (
+	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
-	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
-
+	bc "github.com/patrykferenc/eecoin/internal/blockchain"
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	blockchainCommand "github.com/patrykferenc/eecoin/internal/blockchain/command"
+	blockchaincommand "github.com/patrykferenc/eecoin/internal/blockchain/command"
 	blockchainHttp "github.com/patrykferenc/eecoin/internal/blockchain/net/http"
 	"github.com/patrykferenc/eecoin/internal/common/config"
 	"github.com/patrykferenc/eecoin/internal/common/event"
@@ -102,6 +102,14 @@ func schedulePing(cfg *config.Config, peerComponent *peercntr.Component) {
 	}
 }
 
+func scheduleMining(blockchainComponent *bc.Component, interrupt chan bool) {
+	h := blockchainComponent.Commands.MineBlock
+	for {
+		h.Handle(blockchaincommand.MineBlock{InterruptChannel: interrupt})
+	}
+
+}
+
 func scheduleSave(cfg *config.Config, peerComponent *peercntr.Component) {
 	if cfg.Peers.UpdateFileDuration == 0 {
 		return
@@ -143,12 +151,13 @@ func pubSub(cntr *Container) {
 				slog.Error("Invalid event data")
 				return nil
 			}
-			cmd := blockchainCommand.AddBlock{ToAdd: data.Block}
+			cmd := blockchaincommand.AddBlock{ToAdd: data.Block}
 			err := cntr.blockChainComponent.Commands.AddBlock.Handle(cmd)
 			if err != nil {
 				slog.Error("Failed to handle AddBlock command", "error", err)
 			}
 
+			//c <- true
 			return nil
 		},
 	}
