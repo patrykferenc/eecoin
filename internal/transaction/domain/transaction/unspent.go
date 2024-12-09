@@ -18,6 +18,14 @@ func (o UnspentOutput) Address() string {
 	return o.address
 }
 
+func (o UnspentOutput) Amount() int {
+	return o.amount
+}
+
+func (o UnspentOutput) OutputIndex() int {
+	return o.outputIndex
+}
+
 func NewUnspentOutput(outputID ID, outputIndex int, amount int, address string) UnspentOutput {
 	return UnspentOutput{
 		outputID:    outputID,
