@@ -11,3 +11,43 @@ func (r *UnspentOutputRepository) GetByAddress(address string) ([]*transaction.U
 	r.Called++
 	return r.UnspentOutputs[address], nil
 }
+
+type PoolRepository struct {
+	Called       int
+	Transactions map[transaction.ID]*transaction.Transaction
+}
+
+func (r *PoolRepository) Add(tx *transaction.Transaction) error {
+	r.Called++
+	r.Transactions[tx.ID()] = tx
+	return nil
+}
+
+func (r *PoolRepository) Exists(id transaction.ID) bool {
+	r.Called++
+	_, ok := r.Transactions[id]
+	return ok
+}
+
+func (r *PoolRepository) Remove(ids ...transaction.ID) error {
+	r.Called++
+	for _, id := range ids {
+		delete(r.Transactions, id)
+	}
+	return nil
+}
+
+func (r *PoolRepository) GetAll() []*transaction.Transaction {
+	r.Called++
+	var txs []*transaction.Transaction
+	for _, tx := range r.Transactions {
+		txs = append(txs, tx)
+	}
+	return txs
+}
+
+func NewPoolRepository() *PoolRepository {
+	return &PoolRepository{
+		Transactions: make(map[transaction.ID]*transaction.Transaction),
+	}
+}
