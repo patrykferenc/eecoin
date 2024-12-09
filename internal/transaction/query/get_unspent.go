@@ -53,7 +53,7 @@ func NewGetUnspentOutputs(repo transaction.UnspentOutputRepository) GetUnspentOu
 func (g *getUnspentOutputs) Get() (UnspentOutputs, error) {
 	oo, err := g.repo.GetAll()
 	if err != nil {
-		panic(err)
+		return UnspentOutputs{}, err
 	}
 	return unspentOutputsFromModel(oo), nil
 }

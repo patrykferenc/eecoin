@@ -6,7 +6,13 @@ import (
 	"github.com/patrykferenc/eecoin/internal/transaction/query"
 )
 
-func Route(r chi.Router, addTransaction command.AddTransactionHandler, unspent query.GetUnspentOutputs) {
+func Route(
+	r chi.Router,
+	addTransaction command.AddTransactionHandler,
+	unspent query.GetUnspentOutputs,
+	pool query.GetTransactionPool,
+) {
 	r.Post(transactionURL, postTransaction(addTransaction))
 	r.Get(unspentURL, getUnspent(unspent))
+	r.Get(transactionPoolURL, getTransactionPool(pool))
 }

@@ -64,3 +64,13 @@ func (p *PoolRepository) GetAll() []transaction.Transaction {
 	}
 	return txs
 }
+
+func (p *PoolRepository) Set(txs []transaction.Transaction) error {
+	p.rw.Lock()
+	defer p.rw.Unlock()
+
+	for _, tx := range txs {
+		p.transactions[tx.ID()] = &tx
+	}
+	return nil
+}

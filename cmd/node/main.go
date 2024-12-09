@@ -52,6 +52,8 @@ func main() {
 
 	go pubSub(container)
 
+	go sync(container)
+
 	if err := listenAndServe(container); err != nil {
 		slog.Error("Failed to start HTTP server", "error", err)
 		return
@@ -83,7 +85,12 @@ func listenAndServe(container *Container) error {
 	peerhttp.Route(r, container.peerComponent.Commands.AcceptPing)
 	nodehttp.Route(r, container.nodeComponent.Commands.AcceptClientMessage, container.nodeComponent.Commands.AcceptMessage, container.nodeComponent.Queries.GetChain)
 	blockchainHttp.Route(r, container.blockChainComponent.Commands.AddBlock)
-	transactionhttp.Route(r, container.transactionComponent.Commands.AddTransactionHandler, container.transactionComponent.Queries.GetUnspentOutputs)
+	transactionhttp.Route(
+		r,
+		container.transactionComponent.Commands.AddTransactionHandler,
+		container.transactionComponent.Queries.GetUnspentOutputs,
+		container.transactionComponent.Queries.GetTransactionPool,
+	)
 
 	slog.Info("Listening on :22137")
 	return http.ListenAndServe(":22137", r)
@@ -185,4 +192,14 @@ func pubSub(cntr *Container) {
 	}
 
 	cntr.broker.RouteAll(handlers)
+}
+
+func sync(cntr *Container) {
+	time.Sleep(5 * time.Second)
+	err := cntr.transactionComponent.Application.TransactionUpdater.UpdateFromRemote()
+	if err != nil {
+		slog.Error("Failed to sync", "error", err)
+	} else {
+		slog.Info("Synced")
+	}
 }

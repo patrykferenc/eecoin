@@ -3,6 +3,7 @@ package transaction
 import (
 	"github.com/patrykferenc/eecoin/internal/common/event"
 	peerquery "github.com/patrykferenc/eecoin/internal/peer/query"
+	"github.com/patrykferenc/eecoin/internal/transaction/application"
 	"github.com/patrykferenc/eecoin/internal/transaction/command"
 	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"github.com/patrykferenc/eecoin/internal/transaction/inmem"
@@ -11,12 +12,14 @@ import (
 )
 
 type Component struct {
-	Queries  Queries
-	Commands Commands
+	Queries     Queries
+	Commands    Commands
+	Application Application
 }
 
 type Queries struct {
-	GetUnspentOutputs query.GetUnspentOutputs
+	GetUnspentOutputs  query.GetUnspentOutputs
+	GetTransactionPool query.GetTransactionPool
 }
 
 type Commands struct {
@@ -24,9 +27,13 @@ type Commands struct {
 	AddTransactionHandler       command.AddTransactionHandler
 }
 
+type Application struct {
+	TransactionUpdater *application.TransactionUpdater
+}
+
 func NewComponent(
 	publisher event.Publisher,
-	poolRepository transaction.PoolRepository,
+	poolRepository *inmem.PoolRepository,
 	getPeers peerquery.GetPeers,
 ) Component {
 	pool := transaction.NewPool(poolRepository)
@@ -41,13 +48,30 @@ func NewComponent(
 	)
 	unspent := inmem.NewUnspentOutputRepository()
 	getUnspent := query.NewGetUnspentOutputs(unspent)
+
+	unspentClient := http.NewUnspentOutputsRepository("noop")
+
+	poolClient := &http.TransactionPoolClient{}
+
+	updater := application.NewTransactionUpdater(
+		poolRepository,
+		poolClient,
+		unspent,
+		unspentClient,
+		getPeers,
+	)
+
 	return Component{
 		Queries: Queries{
-			GetUnspentOutputs: getUnspent,
+			GetUnspentOutputs:  getUnspent,
+			GetTransactionPool: poolRepository,
 		},
 		Commands: Commands{
 			AddTransactionHandler:       add,
 			BroadcastTransactionHandler: broadcast,
+		},
+		Application: Application{
+			TransactionUpdater: updater,
 		},
 	}
 }

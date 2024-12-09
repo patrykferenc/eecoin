@@ -52,3 +52,17 @@ func asDTO(tx transaction.Transaction) transactionDTO {
 		Outputs: outputs,
 	}
 }
+
+func asModel(dto transactionDTO) (*transaction.Transaction, error) {
+	inputs := make([]*transaction.Input, len(dto.Inputs))
+	for i, in := range dto.Inputs {
+		inputs[i] = in.asInput()
+	}
+
+	outputs := make([]*transaction.Output, len(dto.Outputs))
+	for i, out := range dto.Outputs {
+		outputs[i] = out.asOutput()
+	}
+
+	return transaction.NewFrom(inputs, outputs)
+}
