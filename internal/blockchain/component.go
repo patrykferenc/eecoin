@@ -3,7 +3,8 @@ package blockchain
 import (
 	"github.com/patrykferenc/eecoin/internal/blockchain/command"
 	"github.com/patrykferenc/eecoin/internal/blockchain/net/http"
-	"github.com/patrykferenc/eecoin/internal/node/domain/node"
+	"github.com/patrykferenc/eecoin/internal/blockchain/query"
+	peersquery "github.com/patrykferenc/eecoin/internal/peer/query"
 )
 
 type Component struct {
@@ -11,19 +12,23 @@ type Component struct {
 	Commands Commands
 }
 
-type Queries struct{}
+type Queries struct {
+	GetChain query.GetChain
+}
 
 type Commands struct {
 	AddBlock  command.AddBlockHandler
 	Broadcast command.BroadcastBlockHandler
 }
 
-func NewComponent(repo command.BlockChainRepository, peersRepo node.PeersRepository) Component {
+func NewComponent(repo command.BlockChainRepository, peers peersquery.GetPeers) Component {
 	broadcaster := http.NewBroadcaster(nil)
 
-	broadcastHandler := command.NewBroadcastBlockHandler(repo, broadcaster, peersRepo)
+	broadcastHandler := command.NewBroadcastBlockHandler(repo, broadcaster, peers)
 	return Component{
-		Queries: Queries{},
+		Queries: Queries{
+			GetChain: query.NewGetChain(repo),
+		},
 		Commands: Commands{
 			AddBlock:  command.NewAddBlockHandler(repo),
 			Broadcast: broadcastHandler,

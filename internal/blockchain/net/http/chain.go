@@ -2,10 +2,11 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
-	"github.com/patrykferenc/eecoin/internal/node/query"
 	"log/slog"
 	"net/http"
+
+	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
+	"github.com/patrykferenc/eecoin/internal/blockchain/query"
 )
 
 func getChain(getChainQueryHandler query.GetChain) http.HandlerFunc {

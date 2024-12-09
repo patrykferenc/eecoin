@@ -16,9 +16,6 @@ import (
 	blockchainHttp "github.com/patrykferenc/eecoin/internal/blockchain/net/http"
 	"github.com/patrykferenc/eecoin/internal/common/config"
 	"github.com/patrykferenc/eecoin/internal/common/event"
-	"github.com/patrykferenc/eecoin/internal/node/command"
-	"github.com/patrykferenc/eecoin/internal/node/domain/node"
-	nodehttp "github.com/patrykferenc/eecoin/internal/node/net/http"
 	peercntr "github.com/patrykferenc/eecoin/internal/peer"
 	peercommand "github.com/patrykferenc/eecoin/internal/peer/command"
 	peerhttp "github.com/patrykferenc/eecoin/internal/peer/net/http"
@@ -47,7 +44,7 @@ func main() {
 	slog.Info("Context constructed")
 
 	go scheduleSave(cfg, container.peerComponent)
-	go schedulePersistChain(cfg, container.nodeComponent.Queries.GetChain.Get())
+	go schedulePersistChain(cfg, container.blockChainComponent.Queries.GetChain.Get())
 	go schedulePing(cfg, container.peerComponent)
 
 	go pubSub(container)
@@ -83,8 +80,7 @@ func listenAndServe(container *Container) error {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	peerhttp.Route(r, container.peerComponent.Commands.AcceptPing)
-	nodehttp.Route(r, container.nodeComponent.Commands.AcceptClientMessage, container.nodeComponent.Commands.AcceptMessage, container.nodeComponent.Queries.GetChain)
-	blockchainHttp.Route(r, container.blockChainComponent.Commands.AddBlock)
+	blockchainHttp.Route(r, container.blockChainComponent.Commands.AddBlock, container.blockChainComponent.Queries.GetChain)
 	transactionhttp.Route(
 		r,
 		container.transactionComponent.Commands.AddTransactionHandler,
@@ -141,40 +137,6 @@ func schedulePersistChain(cfg *config.Config, chain blockchain.BlockChain) {
 
 func pubSub(cntr *Container) {
 	handlers := map[string]func(event.Event) error{
-		"x.message.send": func(e event.Event) error {
-			data, ok := e.Data().(node.SendMessageEvent)
-			if !ok {
-				slog.Error("Invalid event data")
-				return nil
-			}
-			cmd, err := command.NewSendMessage(data.TransactionID)
-			if err != nil {
-				slog.Error("Failed to create SendMessage command", "error", err)
-				return nil
-			}
-			err = cntr.nodeComponent.Commands.SendMessage.Handle(cmd)
-			if err != nil {
-				slog.Error("Failed to handle SendMessage command", "error", err)
-			}
-			return nil
-		},
-		"x.message.sent": func(e event.Event) error {
-			data, ok := e.Data().(node.MessageSentEvent)
-			if !ok {
-				slog.Error("Invalid event data")
-				return nil
-			}
-			cmd, err := command.NewPersistMessage(data.TransactionID)
-			if err != nil {
-				slog.Error("Failed to create PersistMessage command", "error", err)
-				return nil
-			}
-			err = cntr.nodeComponent.Commands.PersistMessage.Handle(cmd)
-			if err != nil {
-				slog.Error("Failed to handle PersistMessage command", "error", err)
-			}
-			return nil
-		},
 		"x.block.added": func(e event.Event) error {
 			data, ok := e.Data().(blockchain.NewBlockAddedEvent)
 			if !ok {
