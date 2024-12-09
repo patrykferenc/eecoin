@@ -17,19 +17,19 @@ func TestCreatingTransaction(t *testing.T) {
 	// given sender
 	privateSender, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	assert.NoError(err)
-	senderAddr, err := x509.MarshalECPrivateKey(privateSender)
+	senderAddr, err := x509.MarshalPKIXPublicKey(privateSender.Public())
 	assert.NoError(err)
 
 	// and given receiver
 	privateReceiver, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader) // only used to generate a public key
 	assert.NoError(err)
-	receiverAddr, err := x509.MarshalECPrivateKey(privateReceiver)
+	receiverAddr, err := x509.MarshalPKIXPublicKey(privateReceiver.Public())
 	assert.NoError(err)
 
 	// and given unspent outputs
 	someTransaction, err := transaction.NewGenesis(string(senderAddr), 100)
 	assert.NoError(err)
-	unspentOutputs := map[string][]transaction.UnspentOutput{
+	unspentOutputs := map[string][]*transaction.UnspentOutput{
 		string(senderAddr): {transaction.NewUnspentOutput(someTransaction.ID(), 0, 100, string(senderAddr))},
 	}
 	unspentOutputRepo := &mock.UnspentOutputRepository{
@@ -44,5 +44,9 @@ func TestCreatingTransaction(t *testing.T) {
 	assert.NoError(err)
 
 	// then transaction should be created
-	assert.NotNil(tx) // TOOD#30 assertions
+	assert.NotNil(tx)
+	assert.NotNil(tx.ID())
+	assert.Len(tx.Inputs(), 1)
+	// and are signed
+	assert.NotEmpty(tx.Inputs()[0].Signature())
 }

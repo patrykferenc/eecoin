@@ -9,7 +9,7 @@ import (
 func TestUnspentWhenValid(t *testing.T) {
 	assert := assert.New(t)
 	// given
-	someUnspents := []UnspentOutput{NewUnspentOutput("someID-1", 0, 100, "someAddress-1"), NewUnspentOutput("someID-2", 1, 200, "someAddress-2"), NewUnspentOutput("someID-3", 2, 300, "someAddress-3")}
+	someUnspents := []*UnspentOutput{NewUnspentOutput("someID-1", 0, 100, "someAddress-1"), NewUnspentOutput("someID-2", 1, 200, "someAddress-2"), NewUnspentOutput("someID-3", 2, 300, "someAddress-3")}
 
 	// when
 	leftover, included, err := calculateUnspentForAmount(someUnspents, 300)
@@ -25,7 +25,7 @@ func TestUnspentWhenValid(t *testing.T) {
 func TestUnspentWhenNotEnough(t *testing.T) {
 	assert := assert.New(t)
 	// given
-	someUnspents := []UnspentOutput{NewUnspentOutput("someID-1", 0, 100, "someAddress-1"), NewUnspentOutput("someID-2", 1, 200, "someAddress-2")}
+	someUnspents := []*UnspentOutput{NewUnspentOutput("someID-1", 0, 100, "someAddress-1"), NewUnspentOutput("someID-2", 1, 200, "someAddress-2")}
 
 	// when
 	_, _, err := calculateUnspentForAmount(someUnspents, 600)

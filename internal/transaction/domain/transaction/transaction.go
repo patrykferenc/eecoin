@@ -14,7 +14,7 @@ func (h ID) String() string {
 	return string(h)
 }
 
-func newID(ins []Input, outs []Output) (ID, error) {
+func newID(ins []*Input, outs []*Output) (ID, error) {
 	var sb strings.Builder
 
 	for _, in := range ins {
@@ -38,11 +38,11 @@ func newID(ins []Input, outs []Output) (ID, error) {
 
 type Transaction struct {
 	id      ID
-	inputs  []Input
-	outputs []Output
+	inputs  []*Input
+	outputs []*Output
 }
 
-func newFrom(inputs []Input, outputs []Output) (*Transaction, error) {
+func newFrom(inputs []*Input, outputs []*Output) (*Transaction, error) {
 	id, err := newID(inputs, outputs)
 	if err != nil {
 		return nil, fmt.Errorf("error creating transaction ID: %w", err)
@@ -59,6 +59,15 @@ func (t Transaction) ID() ID {
 	return t.id
 }
 
+// Inputs() returns immutable slice of inputs
+func (t Transaction) Inputs() []Input {
+	ii := make([]Input, len(t.inputs))
+	for i, in := range t.inputs {
+		ii[i] = *in
+	}
+	return ii
+}
+
 // TODO#30 - address can be taken from signer
 func New(receiverAddr string, senderAddr string, amount int, pk crypto.Signer, unspentOutputRepository UnspentOutputRepository) (*Transaction, error) {
 	unspentOutputs, err := unspentOutputRepository.GetByAddress(senderAddr)
@@ -72,7 +81,7 @@ func New(receiverAddr string, senderAddr string, amount int, pk crypto.Signer, u
 		return nil, fmt.Errorf("error calculating unspent outputs: %w", err)
 	}
 
-	inputs := make([]Input, len(included))
+	inputs := make([]*Input, len(included))
 	for i, unspentOutput := range included {
 		inputs[i] = unspentOutput.AsInput()
 	}
@@ -83,14 +92,19 @@ func New(receiverAddr string, senderAddr string, amount int, pk crypto.Signer, u
 		return nil, fmt.Errorf("error creating transaction: %w", err)
 	}
 
-	// TODO#30 - sign transaction
+	for i, in := range tx.inputs {
+		err := in.sign(pk, tx.id, *included[i])
+		if err != nil {
+			return nil, fmt.Errorf("error signing input: %w", err)
+		}
+	}
 
 	return tx, nil
 }
 
 func NewGenesis(receiverAddr string, amount int) (*Transaction, error) {
-	inputs := []Input{}
-	outputs := []Output{
+	inputs := []*Input{}
+	outputs := []*Output{
 		NewOutput(amount, receiverAddr),
 	}
 
