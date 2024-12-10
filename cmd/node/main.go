@@ -2,12 +2,13 @@ package main
 
 import (
 	"crypto/x509"
-	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
-	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
+	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
 
 	bc "github.com/patrykferenc/eecoin/internal/blockchain"
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
@@ -172,7 +173,12 @@ func pubSub(cntr *Container) {
 				slog.Error("Failed to handle AddBlock command", "error", err)
 			}
 
-			//c <- true
+			err = cntr.blockChainComponent.Commands.Broadcast.Handle(blockchaincommand.BroadcastBlock{Block: data.Block})
+			if err != nil {
+				slog.Error("Failed to broadcast block", "error", err)
+			}
+
+			// c <- true
 			return nil
 		},
 	}

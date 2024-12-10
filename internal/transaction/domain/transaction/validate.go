@@ -91,11 +91,27 @@ func ValidateTransaction(tx *Transaction, unspent UnspentOutputRepository, block
 		return err
 	}
 
+	if err := validateDuplicates(tx.In); err != nil {
+		return err
+	}
+
 	for i := 1; i < len(tx.In); i++ {
 		if err := validateTransactionIn(tx.In[i], tx, unspent); err != nil {
 			return err
 		}
 	}
 
+	return nil
+}
+
+func validateDuplicates(inputs []*Input) error {
+	seen := make(map[string]struct{})
+	for _, in := range inputs {
+		key := fmt.Sprintf("%s:%d", in.OutputId, in.OutputIdx)
+		if _, ok := seen[key]; ok {
+			return errors.New("duplicate input")
+		}
+		seen[key] = struct{}{}
+	}
 	return nil
 }

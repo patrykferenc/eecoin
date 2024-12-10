@@ -3,7 +3,7 @@ package command
 import "github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 
 type BroadcastBlock struct {
-	Index int
+	Block blockchain.Block
 }
 
 type BroadcastBlockHandler interface {
@@ -33,18 +33,13 @@ type peers interface {
 }
 
 func (h *broadcastBlockHandler) Handle(cmd BroadcastBlock) error {
-	chain := h.repository.GetChain()
-	block, err := chain.GetBlock(cmd.Index)
-	if err != nil {
-		return err
-	}
-
+	_ = h.repository.GetChain() // TODO for lint xd
 	peers, err := h.peers.Get()
 	if err != nil {
 		return err
 	}
 
-	err = h.broadcaster.Broadcast(block, peers)
+	err = h.broadcaster.Broadcast(cmd.Block, peers)
 	if err != nil {
 		return err
 	}

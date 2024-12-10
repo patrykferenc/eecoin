@@ -43,6 +43,61 @@ func TestValidateCoinbaseValid(t *testing.T) {
 	assert.NoError(err)
 }
 
+func TestValidateDuplicateInputs(t *testing.T) {
+	assert := assert.New(t)
+
+	// --- Setup ---
+
+	// Generate key pair for the sender
+	privateSender, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	assert.NoError(err)
+	senderAddrBytes, err := x509.MarshalPKIXPublicKey(privateSender.Public())
+	assert.NoError(err)
+	senderAddr := hex.EncodeToString(senderAddrBytes)
+
+	// Create a referenced unspent output
+	unspentOutput := NewUnspentOutput("some-tx-id", 0, 100, senderAddr)
+
+	// Mock UnspentOutputRepository
+	mockUnspentRepo := &mockUnspentOutputRepository{
+		UnspentOutputs: map[string][]UnspentOutput{
+			senderAddr: {unspentOutput},
+		},
+	}
+
+	// Create a transaction ID and sign it
+	txID := "some-tx-id"
+	txIDHash := sha256.Sum256([]byte(txID))
+	r, s, err := ecdsa.Sign(rand.Reader, privateSender, txIDHash[:])
+	assert.NoError(err)
+	signature := append(r.Bytes(), s.Bytes()...)
+
+	// Create inputs that reference the same output
+	input1 := &Input{
+		OutputId:  "some-tx-id",
+		OutputIdx: 0,
+		Sig:       hex.EncodeToString(signature),
+	}
+	input2 := &Input{
+		OutputId:  "some-tx-id",
+		OutputIdx: 0,
+		Sig:       hex.EncodeToString(signature),
+	}
+
+	// Create a transaction with duplicate inputs
+	tx := &Transaction{
+		Id: ID(txID),
+		In: []*Input{input1, input2},
+	}
+
+	// --- Test Case ---
+
+	t.Run("DuplicateInputs", func(t *testing.T) {
+		err := ValidateTransaction(tx, mockUnspentRepo, 0)
+		assert.Error(err, "expected error for duplicate inputs")
+	})
+}
+
 func TestValidateTransactionIn(t *testing.T) {
 	assert := assert.New(t)
 
@@ -60,9 +115,6 @@ func TestValidateTransactionIn(t *testing.T) {
 
 	// Mock UnspentOutputRepository
 	mockUnspentRepo := &mockUnspentOutputRepository{
-		// UnspentOutputs: map[string][]UnspentOutput{
-		// 	string(senderAddr): {unspentOutput},
-		// },
 		UnspentOutputs: map[string][]UnspentOutput{
 			string(senderAddr): {unspentOutput},
 		},
