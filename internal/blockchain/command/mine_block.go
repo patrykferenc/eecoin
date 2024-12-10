@@ -36,7 +36,6 @@ func (h *mineBlockHandler) Handle(cmd MineBlock) {
 	var chain = h.repository.GetChain()
 	var previousBlock = chain.GetLast()
 	var c, err = blockchain.NewChallenge(previousBlock.Challenge.Difficulty, previousBlock.Challenge.TimeCapMillis)
-
 	if err != nil {
 		slog.Error("Error creating challenge", "error", err)
 	}
@@ -55,14 +54,16 @@ func (h *mineBlockHandler) Handle(cmd MineBlock) {
 			continue
 		}
 		if c.MatchesDifficulty() {
-
+			slog.Info("Block mined", "index", len(chain.Blocks), "hash", c.HashValue)
 			b, err := chain.NewBlock(currentTime, transactions, c)
 			if err != nil {
 				slog.Error("Error creating new block", "error", err)
 				continue
 			}
+			slog.Info("New block created", "index", len(chain.Blocks))
 
 			err = h.repository.PutBlock(b)
+
 			if err != nil {
 				slog.Error("Error adding new block", "error", err)
 				continue
@@ -83,9 +84,15 @@ func (h *mineBlockHandler) Handle(cmd MineBlock) {
 			chain = h.repository.GetChain()
 			previousBlock = chain.GetLast()
 		}
-		if <-cmd.InterruptChannel {
+		select {
+		case <-cmd.InterruptChannel:
+			slog.Info("Mining interrupted. Updating chain", "length", len(chain.Blocks))
 			chain = h.repository.GetChain()
 			previousBlock = chain.GetLast()
+			slog.Info("Chain updated", "length", len(chain.Blocks))
+			return
+		default:
+			//slog.Info("Mining loop, no update...")
 		}
 	}
 }
