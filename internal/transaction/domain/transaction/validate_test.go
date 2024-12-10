@@ -18,8 +18,8 @@ func TestValidateCoinbaseInvalid(t *testing.T) {
 	// given a coinbase transaction
 	in := NewInput(ID("some-output-id"), 0, "sign")
 	tx := &Transaction{
-		inputs:  []*Input{&in},
-		outputs: []*Output{NewOutput(COINBASE_AMOUNT, "some-address")},
+		In: []*Input{&in},
+		Ou: []*Output{NewOutput(COINBASE_AMOUNT, "some-address")},
 	}
 	blockHeight := 1
 
@@ -70,7 +70,7 @@ func TestValidateTransactionIn(t *testing.T) {
 
 	// Create a transaction referencing the unspent output
 	tx := &Transaction{
-		id: "some-tx-id",
+		Id: "some-tx-id",
 	}
 
 	// Valid signature
@@ -81,9 +81,9 @@ func TestValidateTransactionIn(t *testing.T) {
 	signature := append(r.Bytes(), s.Bytes()...)
 
 	validInput := &Input{
-		outputID:    "some-tx-id",
-		outputIndex: 0,
-		signature:   hex.EncodeToString(signature),
+		OutputId:  "some-tx-id",
+		OutputIdx: 0,
+		Sig:       hex.EncodeToString(signature),
 	}
 
 	// --- Valid Case ---
@@ -101,9 +101,9 @@ func TestValidateTransactionIn(t *testing.T) {
 		tamperedSignature[len(tamperedSignature)-1] ^= 0xFF // Flip the last byte
 
 		invalidInput := &Input{
-			outputID:    "some-tx-id",
-			outputIndex: 0,
-			signature:   hex.EncodeToString(tamperedSignature),
+			OutputId:  "some-tx-id",
+			OutputIdx: 0,
+			Sig:       hex.EncodeToString(tamperedSignature),
 		}
 
 		err := validateTransactionIn(invalidInput, tx, mockUnspentRepo)
