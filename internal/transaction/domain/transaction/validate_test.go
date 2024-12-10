@@ -34,6 +34,7 @@ func TestValidateCoinbaseValid(t *testing.T) {
 	assert := assert.New(t)
 	// given a coinbase transaction
 	tx, err := NewCoinbase("some-address", 1)
+	assert.NoError(err)
 
 	// when validating the coinbase transaction
 	err = validateCoinbase(tx, 1)
