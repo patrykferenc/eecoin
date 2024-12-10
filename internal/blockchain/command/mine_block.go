@@ -43,19 +43,18 @@ func (h *mineBlockHandler) Handle(cmd MineBlock) {
 	for {
 		currentTime := time.Now().UnixMilli()
 		var transactions = h.poolRepository.GetAll()
-		err := c.RollNonce(previousBlock, transactions, currentTime)
+		tx, err := transaction.NewCoinbase(h.selfAddr, 10)
+		transactions = append([]transaction.Transaction{*tx}, transactions...)
+		if err != nil {
+			slog.Error("Error creating coinbase transaction", "error", err)
+			continue
+		}
+		err = c.RollNonce(previousBlock, transactions, currentTime)
 		if err != nil {
 			slog.Error("Error rolling nonce", "error", err)
 			continue
 		}
 		if c.MatchesDifficulty() {
-			tx, err := transaction.NewCoinbase(h.selfAddr, 10)
-			if err != nil {
-				slog.Error("Error creating coinbase transaction", "error", err)
-				continue
-			}
-
-			transactions = append([]transaction.Transaction{*tx}, transactions...)
 
 			b, err := chain.NewBlock(currentTime, transactions, c)
 			if err != nil {
@@ -84,8 +83,7 @@ func (h *mineBlockHandler) Handle(cmd MineBlock) {
 			chain = h.repository.GetChain()
 			previousBlock = chain.GetLast()
 		}
-		select {
-		case <-cmd.InterruptChannel:
+		if <-cmd.InterruptChannel {
 			chain = h.repository.GetChain()
 			previousBlock = chain.GetLast()
 		}
