@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"testing"
 	"time"
 
@@ -12,9 +13,9 @@ func TestContentHash(t *testing.T) {
 	block := Block{
 		Index:          1,
 		TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 1).UnixMilli(),
-		ContentHash:    "/MNLyLMEHlB0Jj8gnyaWVezCredfngzK3sQAxELNe3o=",
+		ContentHash:    "25Jmo2kFkG9nr7d2DPDGz9kqMYKrFtSadslkuNuDLEY=",
 		PrevHash:       "D6bHWTk7daQ0dXVoxGG1XhtVIAwmLgoexNnv53wi3yc=",
-		Transactions:   make([]TransactionID, 0),
+		Transactions:   make([]transaction.Transaction, 0),
 		Challenge:      Challenge{},
 	}
 	result, _ := CalculateHash(block)
@@ -39,7 +40,7 @@ func TestImportBlock_shouldError(t *testing.T) {
 					TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
 					ContentHash:    "2137",
 					PrevHash:       "2137",
-					Transactions:   make([]TransactionID, 0),
+					Transactions:   make([]transaction.Transaction, 0),
 					Challenge:      Challenge{},
 				},
 			},
@@ -84,7 +85,7 @@ func TestNewBlock(t *testing.T) {
 	assertThat.Nil(err)
 	// and given
 	timestamp := time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli()
-	transactions := make([]TransactionID, 0)
+	transactions := make([]transaction.Transaction, 0)
 
 	// and given
 	solvedChallenge, err := NewChallenge(2, 2)
@@ -110,7 +111,7 @@ func TestAddBlock_shouldWork(t *testing.T) {
 	assertThat.Nil(err)
 	// and given
 	timestamp := time.Date(2025, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 120).UnixMilli()
-	transactions := make([]TransactionID, 0)
+	transactions := make([]transaction.Transaction, 0)
 
 	// and given
 	solvedChallenge, err := NewChallenge(2, 2)
@@ -147,7 +148,7 @@ func TestBlockChain_GetCumulativeDifficulty(t *testing.T) {
 
 	// and given
 	timestamp := time.Date(2025, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 120).UnixMilli()
-	transactions := make([]TransactionID, 0)
+	transactions := make([]transaction.Transaction, 0)
 
 	// and given
 	solvedChallengeOne, err := NewChallenge(2, 2)
@@ -212,7 +213,7 @@ func TestNewBlockWithAddBlock_shouldNotWork(t *testing.T) {
 				TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
 				ContentHash:    "2137",
 				PrevHash:       genesis.ContentHash,
-				Transactions:   make([]TransactionID, 0),
+				Transactions:   make([]transaction.Transaction, 0),
 				Challenge:      Challenge{},
 			},
 		},
@@ -223,7 +224,7 @@ func TestNewBlockWithAddBlock_shouldNotWork(t *testing.T) {
 				TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli(),
 				ContentHash:    "2137",
 				PrevHash:       "2136",
-				Transactions:   make([]TransactionID, 0),
+				Transactions:   make([]transaction.Transaction, 0),
 				Challenge:      Challenge{},
 			},
 		},
@@ -234,7 +235,7 @@ func TestNewBlockWithAddBlock_shouldNotWork(t *testing.T) {
 				TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 1).UnixMilli(),
 				ContentHash:    "2137",
 				PrevHash:       "D6bHWTk7daQ0dXVoxGG1XhtVIAwmLgoexNnv53wi3yc=",
-				Transactions:   make([]TransactionID, 0),
+				Transactions:   make([]transaction.Transaction, 0),
 				Challenge:      Challenge{},
 			},
 		},
@@ -245,7 +246,7 @@ func TestNewBlockWithAddBlock_shouldNotWork(t *testing.T) {
 				TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 1).UnixMilli(),
 				ContentHash:    "/MNLyLMEHlB0Jj8gnyaWVezCredfngzK3sQAxELNe3o=",
 				PrevHash:       "D6bHWTk7daQ0dXVoxGG1XhtVIAwmLgoexNnv53wi3yc=",
-				Transactions:   make([]TransactionID, 0),
+				Transactions:   make([]transaction.Transaction, 0),
 				Challenge:      Challenge{},
 			},
 		},
@@ -256,7 +257,7 @@ func TestNewBlockWithAddBlock_shouldNotWork(t *testing.T) {
 				TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 1).UnixMilli(),
 				ContentHash:    "/MNLyLMEHlB0Jj8gnyaWVezCredfngzK3sQAxELNe3o=",
 				PrevHash:       "D6bHWTk7daQ0dXVoxGG1XhtVIAwmLgoexNnv53wi3yc=",
-				Transactions:   make([]TransactionID, 0),
+				Transactions:   make([]transaction.Transaction, 0),
 				Challenge:      Challenge{},
 			},
 		},

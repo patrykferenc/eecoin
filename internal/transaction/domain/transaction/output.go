@@ -1,23 +1,23 @@
 package transaction
 
 type Output struct {
-	amount  int
-	address string // TODO#30 address struct?
+	Amoun int
+	Addr  string // TODO#30 Addr struct?
 }
 
 func NewOutput(amount int, address string) *Output {
 	return &Output{
-		amount:  amount,
-		address: address,
+		Amoun: amount,
+		Addr:  address,
 	}
 }
 
 func (o Output) Amount() int {
-	return o.amount
+	return o.Amoun
 }
 
 func (o Output) Address() string {
-	return o.address
+	return o.Addr
 }
 
 func generateOutputsFor(amount int, leftover int, senderAddr string, receiverAddr string) []*Output {

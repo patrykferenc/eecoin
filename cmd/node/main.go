@@ -1,7 +1,9 @@
 package main
 
 import (
+	"crypto/x509"
 	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
+	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
 	"log/slog"
 	"net/http"
 	"os"
@@ -30,6 +32,19 @@ func main() {
 		slog.Error("Failed to read config", "error", err)
 		return
 	}
+	if cfg.Persistence.SelfKey == "" {
+		key, err := wallet.NewEcdsaKey()
+		if err != nil {
+			slog.Error("Failed to generate key", "error", err)
+			return
+		}
+		marshalled, err := x509.MarshalPKIXPublicKey(key.Public)
+		if err != nil {
+			slog.Error("Failed to marshal public key", "error", err)
+			return
+		}
+		cfg.Persistence.SelfKey = string(marshalled)
+	}
 
 	if err := setLoggerLevel(cfg); err != nil {
 		slog.Error("Failed to set logger level", "error", err)
@@ -46,6 +61,7 @@ func main() {
 	go scheduleSave(cfg, container.peerComponent)
 	go schedulePersistChain(cfg, container.blockChainComponent.Queries.GetChain.Get())
 	go schedulePing(cfg, container.peerComponent)
+	go scheduleMining(container.blockChainComponent, container.interruptionChanel)
 
 	go pubSub(container)
 
@@ -107,7 +123,6 @@ func scheduleMining(blockchainComponent *bc.Component, interrupt chan bool) {
 	for {
 		h.Handle(blockchaincommand.MineBlock{InterruptChannel: interrupt})
 	}
-
 }
 
 func scheduleSave(cfg *config.Config, peerComponent *peercntr.Component) {

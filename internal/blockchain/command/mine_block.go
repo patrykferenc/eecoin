@@ -3,6 +3,7 @@ package command
 import (
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	ev "github.com/patrykferenc/eecoin/internal/common/event"
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"log/slog"
 	"time"
 )
@@ -16,14 +17,18 @@ type MineBlockHandler interface {
 }
 
 type mineBlockHandler struct {
-	repository BlockChainRepository
-	publisher  ev.Publisher
+	selfAddr       string
+	repository     BlockChainRepository
+	publisher      ev.Publisher
+	poolRepository transaction.PoolRepository
 }
 
-func NewMineBlockHandler(repository BlockChainRepository, publisher ev.Publisher) MineBlockHandler {
+func NewMineBlockHandler(selfAddress string, repository BlockChainRepository, publisher ev.Publisher, poolRepository transaction.PoolRepository) MineBlockHandler {
 	return &mineBlockHandler{
-		repository: repository,
-		publisher:  publisher,
+		repository:     repository,
+		publisher:      publisher,
+		poolRepository: poolRepository,
+		selfAddr:       selfAddress,
 	}
 }
 
@@ -32,39 +37,52 @@ func (h *mineBlockHandler) Handle(cmd MineBlock) {
 	var previousBlock = chain.GetLast()
 	var c, err = blockchain.NewChallenge(previousBlock.Challenge.Difficulty, previousBlock.Challenge.TimeCapMillis)
 
-	// TODO actual transactions should be here
-	var transactionsStub []blockchain.TransactionID
 	if err != nil {
 		slog.Error("Error creating challenge", "error", err)
 	}
 	for {
 		currentTime := time.Now().UnixMilli()
-		err := c.RollNonce(previousBlock, transactionsStub, currentTime)
+		var transactions = h.poolRepository.GetAll()
+		err := c.RollNonce(previousBlock, transactions, currentTime)
 		if err != nil {
 			slog.Error("Error rolling nonce", "error", err)
 			continue
 		}
 		if c.MatchesDifficulty() {
-			b, err := chain.NewBlock(currentTime, transactionsStub, c)
+			tx, err := transaction.NewCoinbase(h.selfAddr, 10)
+			if err != nil {
+				slog.Error("Error creating coinbase transaction", "error", err)
+				continue
+			}
+
+			transactions = append([]transaction.Transaction{*tx}, transactions...)
+
+			b, err := chain.NewBlock(currentTime, transactions, c)
 			if err != nil {
 				slog.Error("Error creating new block", "error", err)
 				continue
 			}
+
 			err = h.repository.PutBlock(b)
 			if err != nil {
 				slog.Error("Error adding new block", "error", err)
 				continue
 			}
+
 			event, err := ev.New(blockchain.NewBlockAddedEvent{Block: b}, "x.block.added")
 			if err != nil {
 				slog.Error("Error creating event", "error", err)
 				continue
 			}
+
 			err = h.publisher.Publish(event)
 			if err != nil {
 				slog.Error("Error publishing event", "error", err)
 				continue
 			}
+
+			chain = h.repository.GetChain()
+			previousBlock = chain.GetLast()
 		}
 		select {
 		case <-cmd.InterruptChannel:

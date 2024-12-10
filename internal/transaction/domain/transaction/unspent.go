@@ -37,8 +37,8 @@ func NewUnspentOutput(outputID ID, outputIndex int, amount int, address string) 
 
 func (o UnspentOutput) AsInput() *Input {
 	return &Input{
-		outputID:    o.outputID,
-		outputIndex: o.outputIndex,
+		OutputId:  o.outputID,
+		OutputIdx: o.outputIndex,
 	}
 }
 
@@ -61,7 +61,7 @@ func calculateUnspentForAmount(unspentOutputs []UnspentOutput, amount int) (left
 	}
 
 	if currentAmount < amount {
-		return 0, nil, fmt.Errorf("not enough unspent outputs to cover the amount, have %d, need %d", currentAmount, amount)
+		return 0, nil, fmt.Errorf("not enough unspent Ou to cover the Amoun, have %d, need %d", currentAmount, amount)
 	}
 
 	return currentAmount - amount, included, nil

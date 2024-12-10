@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"encoding/base64"
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -75,7 +76,7 @@ func TestRollNonce(t *testing.T) {
 	// given
 	challenge, err := NewChallenge(2, 60)
 	assertThat.Nil(err)
-	transactions := make([]TransactionID, 0)
+	transactions := make([]transaction.Transaction, 0)
 
 	// and given
 	initialNonce := challenge.Nonce
@@ -137,7 +138,7 @@ func TestRollUntil(t *testing.T) {
 	challenge, _ := NewChallenge(2, 60)
 	initialNonce := challenge.Nonce
 	initialHash := challenge.HashValue
-	transactions := make([]TransactionID, 0)
+	transactions := make([]transaction.Transaction, 0)
 
 	// and given
 	prePreparedBlock := GenerateGenesisBlock()

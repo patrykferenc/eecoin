@@ -29,6 +29,10 @@ type Key[T any, E any] struct {
 	algType Algorithm
 }
 
+func (k *Key[T, E]) Private() T {
+	return k.private
+}
+
 type KeyElement[T any] struct {
 	Key     *T
 	Present bool

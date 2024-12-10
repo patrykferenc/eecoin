@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -41,22 +42,21 @@ func (m *mockHandler) Handle(command command.AddBlock) error {
 
 func TestBlockHandler_HandleBlockPost(t *testing.T) {
 	// given
+	sampleTransaction := transaction.Transaction{Id: "skibidi"}
+	sampleTransactionDTO := transactionDTO{ID: "skibidi"}
 	mockBlockDTO := blockDTO{
 		Index:          1,
 		TimestampMilis: 1630000000000,
 		ContentHash:    "12345",
 		PrevHash:       "54321",
-		Transactions:   []string{"tx1", "tx2"},
+		Transactions:   []transactionDTO{sampleTransactionDTO},
 	}
 	mockBlock := blockchain.Block{
 		Index:          mockBlockDTO.Index,
 		TimestampMilis: mockBlockDTO.TimestampMilis,
 		ContentHash:    mockBlockDTO.ContentHash,
 		PrevHash:       mockBlockDTO.PrevHash,
-		Transactions: []blockchain.TransactionID{
-			"tx1",
-			"tx2",
-		},
+		Transactions:   []transaction.Transaction{sampleTransaction},
 	}
 
 	t.Run("Successful Block Post", func(t *testing.T) {

@@ -14,19 +14,19 @@ func TestGenerateOutputsWhenLeftover(t *testing.T) {
 
 	// then
 	if len(outputs) != 2 {
-		t.Error("expected 2 outputs")
+		t.Error("expected 2 Ou")
 	}
 	if outputs[0].Amount() != amount {
-		t.Error("expected amount to be", amount)
+		t.Error("expected Amoun to be", amount)
 	}
 	if outputs[0].Address() != receiverAddr {
-		t.Error("expected address to be", receiverAddr)
+		t.Error("expected Addr to be", receiverAddr)
 	}
 	if outputs[1].Amount() != leftover {
 		t.Error("expected leftover to be", leftover)
 	}
 	if outputs[1].Address() != senderAddr {
-		t.Error("expected address to be", senderAddr)
+		t.Error("expected Addr to be", senderAddr)
 	}
 }
 
@@ -45,9 +45,9 @@ func TestGenerateOutputsWhenNoLeftover(t *testing.T) {
 		t.Error("expected 1 output")
 	}
 	if outputs[0].Amount() != amount {
-		t.Error("expected amount to be", amount)
+		t.Error("expected Amoun to be", amount)
 	}
 	if outputs[0].Address() != receiverAddr {
-		t.Error("expected address to be", receiverAddr)
+		t.Error("expected Addr to be", receiverAddr)
 	}
 }

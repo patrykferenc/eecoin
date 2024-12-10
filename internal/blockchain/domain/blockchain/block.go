@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"github.com/gymshark/go-hasher"
+	t "github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"time"
 )
 
@@ -21,7 +22,7 @@ type Block struct {
 	TimestampMilis int64
 	ContentHash    string
 	PrevHash       string
-	Transactions   []TransactionID
+	Transactions   []t.Transaction
 	Challenge      Challenge
 }
 
@@ -29,7 +30,7 @@ type BlockChain struct {
 	Blocks []Block
 }
 
-func (chain *BlockChain) NewBlock(timestamp int64, transactions []TransactionID, solved Challenge) (Block, error) {
+func (chain *BlockChain) NewBlock(timestamp int64, transactions []t.Transaction, solved Challenge) (Block, error) {
 	if !solved.MatchesDifficulty() && !blockCreatedAfterPreviousWithinTimeCap(timestamp, solved, chain.GetLast()) {
 		return Block{}, BlockNotValid
 	}
@@ -86,10 +87,10 @@ func (chain *BlockChain) GetBlockByHash(hash string) (Block, error) {
 	return Block{}, BlockNotFound
 }
 
-func (chain *BlockChain) GetBlockByTransactionID(id TransactionID) (Block, error) {
+func (chain *BlockChain) GetBlockByTransactionID(id t.ID) (Block, error) {
 	for _, block := range chain.Blocks {
 		for _, transaction := range block.Transactions {
-			if transaction == id {
+			if transaction.ID() == id {
 				return block, nil
 			}
 		}
@@ -124,7 +125,7 @@ func GenerateGenesisBlock() Block {
 	genesisBlock := &Block{
 		Index:          0,
 		TimestampMilis: GenesisBlockTimestamp,
-		Transactions:   []TransactionID{},
+		Transactions:   []t.Transaction{},
 	}
 	contentHash, _ := CalculateHash(*genesisBlock)
 	genesisBlock.ContentHash = contentHash

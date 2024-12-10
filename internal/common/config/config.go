@@ -26,6 +26,7 @@ type Log struct {
 type Persistence struct {
 	ChainFilePath      string        `yaml:"chainPath" env:"CHAIN_FILE_PATH" env-default:"/etc/eecoin/chain"`
 	UpdateFileDuration time.Duration `yaml:"updateFileDuration" env:"CHAIN_UPDATE_FILE_DURATION" env-default:"1m"`
+	SelfKey            string        `yaml:"selfKey" env:"SELF_KEY"`
 }
 
 func (l *Log) LevelIfSet() (slog.Level, error) {

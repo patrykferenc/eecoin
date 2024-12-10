@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	t "github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"log/slog"
 	"net/http"
 
@@ -19,9 +20,15 @@ func postBlock(addBlockHandler command.AddBlockHandler) http.HandlerFunc {
 			return
 		}
 
-		transactions := make([]blockchain.TransactionID, len(dto.Transactions)) // TODO#30
+		transactions := make([]t.Transaction, len(dto.Transactions)) // TODO#30
 		for i, tx := range dto.Transactions {
-			transactions[i] = blockchain.TransactionID(tx)
+			translated, err := asModel(tx)
+			if err != nil {
+				slog.Warn("failed to decode transaction", "error", err)
+				http.Error(w, "invalid body or faulty decoding method", http.StatusInternalServerError)
+				return
+			}
+			transactions[i] = *translated
 		}
 
 		if err := addBlockHandler.Handle(command.AddBlock{
