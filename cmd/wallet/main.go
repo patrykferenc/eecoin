@@ -143,12 +143,16 @@ func setupCliCommands() []*cli.Command {
 				passphrase := c.Args().Get(3)
 				wl, _ := wallet.ReadWalletFromDirectoryEcdsa(configPath, &passphrase)
 
-				if wl.Keys[index].Present == false {
+				if !wl.Keys[index].Present {
 					slog.Error("Key not present")
 					os.Exit(1)
 				}
 				reciverPub := wl.Keys[index].Key.Public
 				recMarshalled, err := x509.MarshalPKIXPublicKey(reciverPub)
+				if err != nil {
+					fmt.Printf("Cannot marshal public key: %s\n", err)
+
+				}
 				recieverAddr := hex.EncodeToString(recMarshalled)
 
 				selfPub := wl.MainId.Public
