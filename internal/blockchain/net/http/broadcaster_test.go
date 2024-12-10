@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -56,19 +57,35 @@ func TestBroadcaster_Broadcast(t *testing.T) {
 	peerURLs := []string{mockServer.URL}
 	mockClient := mockServer.Client()
 	broadcaster := NewBroadcaster(mockClient)
+	sampleTransaction := transaction.Transaction{Id: "skibidi", In: nil, Ou: nil}
+	sampleTransactionDTO := transactionDTO{ID: "skibidi", Inputs: []inputDTO{}, Outputs: []outputDTO{}}
+	sampleChallange := blockchain.Challenge{
+		Nonce:         123,
+		HashValue:     "12345",
+		Difficulty:    2,
+		TimeCapMillis: 2,
+	}
+	sampleChallangeDto := challengeDTO{
+		Nonce:         123,
+		HashValue:     "12345",
+		Difficulty:    2,
+		TimeCapMillis: 2,
+	}
 	mockBlock := blockchain.Block{
 		Index:          1,
 		TimestampMilis: 123456789,
 		ContentHash:    "12345",
 		PrevHash:       "54321",
-		Transactions:   []blockchain.TransactionID{"tx1", "tx2"},
+		Transactions:   []transaction.Transaction{sampleTransaction},
+		Challenge:      sampleChallange,
 	}
 	expectedBody := blockDTO{
 		Index:          mockBlock.Index,
 		TimestampMilis: mockBlock.TimestampMilis,
 		ContentHash:    mockBlock.ContentHash,
 		PrevHash:       mockBlock.PrevHash,
-		Transactions:   []string{"tx1", "tx2"},
+		Transactions:   []transactionDTO{sampleTransactionDTO},
+		Challenge:      sampleChallangeDto,
 	}
 
 	// when

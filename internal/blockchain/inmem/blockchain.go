@@ -35,3 +35,7 @@ func LoadPersistedBlockchain(path string) (*BlockChain, error) {
 func (b *BlockChain) GetChain() blockchain.BlockChain {
 	return *b.chain
 }
+
+func (b *BlockChain) PutBlock(block blockchain.Block) error {
+	return b.chain.AddBlock(block)
+}

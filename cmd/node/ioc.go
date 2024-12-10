@@ -19,7 +19,8 @@ type Container struct {
 	blockChainComponent  *blockchain.Component
 	transactionComponent *transaction.Component
 
-	broker *event.ChannelBroker
+	broker             *event.ChannelBroker
+	interruptionChanel chan bool
 }
 
 func NewContainer(cfg *config.Config) (*Container, error) {
@@ -45,17 +46,17 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 		}
 	}
 
-	blockChainComponent := blockchain.NewComponent(seenRepo, peerComponent.Queries.GetPeers)
-
 	poolRepo := transactioninmem.NewPoolRepository()
 	tranasactionComponent := transaction.NewComponent(broker, poolRepo, peerComponent.Queries.GetPeers)
+	blockChainComponent := blockchain.NewComponent(cfg.Persistence.SelfKey, seenRepo, peerComponent.Queries.GetPeers, broker, poolRepo)
 
 	return &Container{
 		peerComponent:        &peerComponent,
 		blockChainComponent:  &blockChainComponent,
 		transactionComponent: &tranasactionComponent,
 
-		broker: broker,
+		broker:             broker,
+		interruptionChanel: make(chan bool),
 	}, nil
 }
 

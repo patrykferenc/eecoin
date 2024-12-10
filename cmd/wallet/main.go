@@ -18,6 +18,8 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		panic(err)
 	}
+
+	// nowa transakcja /net/http/
 }
 func setupCliCommands() []*cli.Command {
 	return []*cli.Command{

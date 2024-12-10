@@ -20,13 +20,13 @@ func newID(ins []*Input, outs []*Output) (ID, error) {
 	var sb strings.Builder
 
 	for _, in := range ins {
-		sb.WriteString(in.outputID.String())
-		sb.WriteString(fmt.Sprint(in.outputIndex))
+		sb.WriteString(in.OutputId.String())
+		sb.WriteString(fmt.Sprint(in.OutputIdx))
 	}
 
 	for _, out := range outs {
-		sb.WriteString(fmt.Sprint(out.amount))
-		sb.WriteString(fmt.Sprint(out.address))
+		sb.WriteString(fmt.Sprint(out.Amoun))
+		sb.WriteString(fmt.Sprint(out.Addr))
 	}
 
 	h := sha256.New()
@@ -39,9 +39,9 @@ func newID(ins []*Input, outs []*Output) (ID, error) {
 }
 
 type Transaction struct {
-	id      ID
-	inputs  []*Input
-	outputs []*Output
+	Id ID
+	In []*Input
+	Ou []*Output
 }
 
 func NewFrom(inputs []*Input, outputs []*Output) (*Transaction, error) {
@@ -51,45 +51,45 @@ func NewFrom(inputs []*Input, outputs []*Output) (*Transaction, error) {
 	}
 
 	return &Transaction{
-		id:      id,
-		inputs:  inputs,
-		outputs: outputs,
+		Id: id,
+		In: inputs,
+		Ou: outputs,
 	}, nil
 }
 
 func (t Transaction) ID() ID {
-	return t.id
+	return t.Id
 }
 
-// Inputs() returns immutable slice of inputs
+// Inputs() returns immutable slice of In
 func (t Transaction) Inputs() []Input {
-	ii := make([]Input, len(t.inputs))
-	for i, in := range t.inputs {
+	ii := make([]Input, len(t.In))
+	for i, in := range t.In {
 		ii[i] = *in
 	}
 	return ii
 }
 
-// Outputs() returns immutable slice of outputs
+// Outputs() returns immutable slice of Ou
 func (t Transaction) Outputs() []Output {
-	oo := make([]Output, len(t.outputs))
-	for i, out := range t.outputs {
+	oo := make([]Output, len(t.Ou))
+	for i, out := range t.Ou {
 		oo[i] = *out
 	}
 	return oo
 }
 
-// TODO#30 - address can be taken from signer
+// TODO#30 - Addr can be taken from signer
 func New(receiverAddr string, senderAddr string, amount int, pk crypto.Signer, unspentOutputRepository UnspentOutputRepository) (*Transaction, error) {
 	unspentOutputs, err := unspentOutputRepository.GetByAddress(senderAddr)
 	if err != nil {
-		return nil, fmt.Errorf("error getting unspent outputs: %w", err)
+		return nil, fmt.Errorf("error getting unspent Ou: %w", err)
 	}
 
-	// TODO#38 - filter unspent outputs already present in the pool
+	// TODO#38 - filter unspent Ou already present in the pool
 	leftover, included, err := calculateUnspentForAmount(unspentOutputs, amount)
 	if err != nil {
-		return nil, fmt.Errorf("error calculating unspent outputs: %w", err)
+		return nil, fmt.Errorf("error calculating unspent Ou: %w", err)
 	}
 
 	inputs := make([]*Input, len(included))
@@ -103,8 +103,8 @@ func New(receiverAddr string, senderAddr string, amount int, pk crypto.Signer, u
 		return nil, fmt.Errorf("error creating transaction: %w", err)
 	}
 
-	for i, in := range tx.inputs {
-		err := in.sign(pk, tx.id, included[i])
+	for i, in := range tx.In {
+		err := in.sign(pk, tx.Id, included[i])
 		if err != nil {
 			return nil, fmt.Errorf("error signing input: %w", err)
 		}
@@ -125,9 +125,9 @@ func NewGenesis(receiverAddr string, amount int) (*Transaction, error) {
 	}
 
 	return &Transaction{
-		id:      id,
-		inputs:  inputs,
-		outputs: outputs,
+		Id: id,
+		In: inputs,
+		Ou: outputs,
 	}, nil
 }
 
@@ -146,8 +146,8 @@ func NewCoinbase(receiverAddr string, blockHeight int) (*Transaction, error) {
 	}
 
 	return &Transaction{
-		id:      id,
-		inputs:  inputs,
-		outputs: outputs,
+		Id: id,
+		In: inputs,
+		Ou: outputs,
 	}, nil
 }

@@ -29,7 +29,7 @@ func TestCreatingTransaction(t *testing.T) {
 	assert.NoError(err)
 	receiverAddr := hex.EncodeToString(receiverAddrRaw)
 
-	// and given unspent outputs
+	// and given unspent Ou
 	someTransaction, err := transaction.NewGenesis(string(senderAddr), 100)
 	assert.NoError(err)
 	unspentOutputs := map[string][]transaction.UnspentOutput{
@@ -39,7 +39,7 @@ func TestCreatingTransaction(t *testing.T) {
 		UnspentOutputs: unspentOutputs,
 	}
 
-	// and given amount
+	// and given Amoun
 	amount := 100
 
 	// when creating a transaction

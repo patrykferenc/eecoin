@@ -4,7 +4,9 @@ import (
 	"github.com/patrykferenc/eecoin/internal/blockchain/command"
 	"github.com/patrykferenc/eecoin/internal/blockchain/net/http"
 	"github.com/patrykferenc/eecoin/internal/blockchain/query"
+	"github.com/patrykferenc/eecoin/internal/common/event"
 	peersquery "github.com/patrykferenc/eecoin/internal/peer/query"
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 )
 
 type Component struct {
@@ -19,12 +21,14 @@ type Queries struct {
 type Commands struct {
 	AddBlock  command.AddBlockHandler
 	Broadcast command.BroadcastBlockHandler
+	MineBlock command.MineBlockHandler
 }
 
-func NewComponent(repo command.BlockChainRepository, peers peersquery.GetPeers) Component {
+func NewComponent(selfAddress string, repo command.BlockChainRepository, peers peersquery.GetPeers, publisher event.Publisher, repository transaction.PoolRepository) Component {
 	broadcaster := http.NewBroadcaster(nil)
 
 	broadcastHandler := command.NewBroadcastBlockHandler(repo, broadcaster, peers)
+	mineBlockHandler := command.NewMineBlockHandler(selfAddress, repo, publisher, repository)
 	return Component{
 		Queries: Queries{
 			GetChain: query.NewGetChain(repo),
@@ -32,6 +36,7 @@ func NewComponent(repo command.BlockChainRepository, peers peersquery.GetPeers) 
 		Commands: Commands{
 			AddBlock:  command.NewAddBlockHandler(repo),
 			Broadcast: broadcastHandler,
+			MineBlock: mineBlockHandler,
 		},
 	}
 }
