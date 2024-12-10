@@ -85,3 +85,17 @@ func validateTransactionIn(inputTx *Input, tx *Transaction, unspent UnspentOutpu
 
 	return nil
 }
+
+func ValidateTransaction(tx *Transaction, unspent UnspentOutputRepository, blockHeight int) error {
+	if err := validateCoinbase(tx, blockHeight); err != nil {
+		return err
+	}
+
+	for i := 1; i < len(tx.inputs); i++ {
+		if err := validateTransactionIn(tx.inputs[i], tx, unspent); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
