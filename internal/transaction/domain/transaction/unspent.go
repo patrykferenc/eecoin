@@ -45,6 +45,7 @@ func (o UnspentOutput) AsInput() *Input {
 type UnspentOutputRepository interface {
 	GetAll() ([]UnspentOutput, error)
 	GetByAddress(address string) ([]UnspentOutput, error)
+	GetByOutputIDAndIndex(outputID ID, outputIndex int) (UnspentOutput, error)
 	Set(unspentOutputs []UnspentOutput) error
 }
 
