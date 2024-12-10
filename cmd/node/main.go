@@ -2,13 +2,13 @@ package main
 
 import (
 	"crypto/x509"
+	"encoding/hex"
+	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
+	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
-
-	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
-	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
 
 	bc "github.com/patrykferenc/eecoin/internal/blockchain"
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
@@ -44,7 +44,8 @@ func main() {
 			slog.Error("Failed to marshal public key", "error", err)
 			return
 		}
-		cfg.Persistence.SelfKey = string(marshalled)
+		senderAddr := hex.EncodeToString(marshalled)
+		cfg.Persistence.SelfKey = senderAddr
 	}
 
 	if err := setLoggerLevel(cfg); err != nil {
@@ -121,9 +122,12 @@ func schedulePing(cfg *config.Config, peerComponent *peercntr.Component) {
 
 func scheduleMining(blockchainComponent *bc.Component, interrupt chan bool) {
 	h := blockchainComponent.Commands.MineBlock
+	slog.Info("Mining started")
 	for {
 		h.Handle(blockchaincommand.MineBlock{InterruptChannel: interrupt})
+		slog.Info("Mining loop exited")
 	}
+
 }
 
 func scheduleSave(cfg *config.Config, peerComponent *peercntr.Component) {
@@ -178,7 +182,7 @@ func pubSub(cntr *Container) {
 				slog.Error("Failed to broadcast block", "error", err)
 			}
 
-			// c <- true
+			cntr.interruptionChanel <- true
 			return nil
 		},
 	}
