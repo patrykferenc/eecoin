@@ -14,6 +14,11 @@ type unspentOutputsRepository struct {
 	remote string
 }
 
+func (u *unspentOutputsRepository) GetByOutputIDAndIndex(outputID transaction.ID, outputIndex int) (transaction.UnspentOutput, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewUnspentOutputsRepository(remote string) *unspentOutputsRepository {
 	return &unspentOutputsRepository{remote: remote}
 }

@@ -84,7 +84,7 @@ func TestNewBlock(t *testing.T) {
 	chain, err := ImportBlockchain([]Block{genesis})
 	assertThat.Nil(err)
 	// and given
-	timestamp := time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli()
+	timestamp := time.Date(2028, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli()
 	transactions := make([]transaction.Transaction, 0)
 
 	// and given
@@ -190,7 +190,7 @@ func TestBlockChain_GetCumulativeDifficulty(t *testing.T) {
 	assertThat.Nil(err)
 
 	assertThat.Greater(chainTwo.GetCumulativeDifficulty(), chainOne.GetCumulativeDifficulty())
-	assertThat.Equal(chainTwo.GetCumulativeDifficulty(), int64(9+9))
+	assertThat.Equal(int64(81+9+9), chainTwo.GetCumulativeDifficulty())
 }
 
 func TestNewBlockWithAddBlock_shouldNotWork(t *testing.T) {

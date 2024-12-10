@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/gymshark/go-hasher"
 	t "github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+	"log/slog"
 	"time"
 )
 
@@ -13,6 +14,8 @@ var (
 	InvalidContentHash    = "Invalid Content Hash"
 	BlockNotFound         = errors.New("block not found")
 	BlockNotValid         = errors.New("block is not valid")
+	BlockDidNotMatchDiff  = errors.New("block did not match difficulty")
+	BlockWasNotWithinTime = errors.New("block was not within time")
 	ChainNotValid         = errors.New("chain not valid")
 	GenesisBlockTimestamp = time.Date(2024, 11, 16, 20, 23, 0, 0, time.UTC).UnixMilli()
 )
@@ -31,8 +34,13 @@ type BlockChain struct {
 }
 
 func (chain *BlockChain) NewBlock(timestamp int64, transactions []t.Transaction, solved Challenge) (Block, error) {
-	if !solved.MatchesDifficulty() && !blockCreatedAfterPreviousWithinTimeCap(timestamp, solved, chain.GetLast()) {
-		return Block{}, BlockNotValid
+	if !solved.MatchesDifficulty() {
+		slog.Error("Block not valid", "reason", "difficulty not met")
+		return Block{}, BlockDidNotMatchDiff
+	}
+	if !blockCreatedAfterPreviousWithinTimeCap(timestamp, solved, chain.GetLast()) {
+		slog.Error("Block not valid", "reason", "time cap not met")
+		return Block{}, BlockWasNotWithinTime
 	}
 	previousHash := chain.Blocks[len(chain.Blocks)-1].ContentHash
 	newBlock := &Block{
@@ -126,6 +134,10 @@ func GenerateGenesisBlock() Block {
 		Index:          0,
 		TimestampMilis: GenesisBlockTimestamp,
 		Transactions:   []t.Transaction{},
+		Challenge: Challenge{
+			TimeCapMillis: 1,
+			Difficulty:    9,
+		},
 	}
 	contentHash, _ := CalculateHash(*genesisBlock)
 	genesisBlock.ContentHash = contentHash
