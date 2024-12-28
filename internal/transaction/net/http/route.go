@@ -14,5 +14,5 @@ func Route(
 ) {
 	r.Post(transactionURL, postTransaction(addTransaction))
 	r.Get(unspentURL, getUnspent(unspent))
-	r.Get(transactionPoolURL, getTransactionPool(pool))
+	r.Get(poolURL, getTransactionPool(pool))
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 )
 
-var url = "/transaction"
+var transactionURL = "/transaction"
 
 type Broadcaster struct {
 	client   *http.Client
@@ -40,7 +40,7 @@ func (b *Broadcaster) Broadcast(tx transaction.Transaction) error {
 
 	for _, peer := range peers {
 		go func(peer string) {
-			req, err := http.NewRequest(http.MethodPost, peer+url, bytes.NewReader(body))
+			req, err := http.NewRequest(http.MethodPost, peer+transactionURL, bytes.NewReader(body))
 			if err != nil {
 				errors <- err
 				return

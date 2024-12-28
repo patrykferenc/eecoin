@@ -9,8 +9,6 @@ import (
 	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 )
 
-const transactionURL = "/transaction"
-
 func postTransaction(addTransactionHandler command.AddTransactionHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var dto transactionDTO
