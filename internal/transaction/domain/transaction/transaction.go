@@ -38,7 +38,7 @@ func newID(ins []*Input, outs []*Output) (ID, error) {
 	return ID(h.Sum(nil)), nil
 }
 
-type Transaction struct {
+type Transaction struct { // TODO#30 - rename
 	Id ID
 	In []*Input
 	Ou []*Output
