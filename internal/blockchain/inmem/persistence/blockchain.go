@@ -2,9 +2,10 @@ package persistence
 
 import (
 	"encoding/json"
+	"os"
+
 	bc "github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
-	"os"
 )
 
 type ChainDto struct {
@@ -14,7 +15,6 @@ type ChainDto struct {
 func MapToDto(blockchain bc.BlockChain) ChainDto {
 	dtoBlocks := make([]blockDTO, len(blockchain.Blocks))
 	for i, block := range blockchain.Blocks {
-
 		dtoBlocks[i] = asDTO(block)
 	}
 	return ChainDto{Blocks: dtoBlocks}
@@ -109,8 +109,7 @@ type inputDTO struct {
 }
 
 func (i inputDTO) asInput() *transaction.Input {
-	o := transaction.NewInput(transaction.ID(i.OutputID), i.OutputIndex, i.Signature)
-	return &o
+	return transaction.NewInput(transaction.ID(i.OutputID), i.OutputIndex, i.Signature)
 }
 
 type outputDTO struct {

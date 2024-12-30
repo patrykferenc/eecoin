@@ -11,11 +11,11 @@ import (
 type Input struct {
 	OutputId  ID
 	OutputIdx int
-	Sig       string // TODO#30 Sig struct
+	Sig       string
 }
 
-func NewInput(outputID ID, outputIndex int, signature string) Input {
-	return Input{
+func NewInput(outputID ID, outputIndex int, signature string) *Input {
+	return &Input{
 		OutputId:  outputID,
 		OutputIdx: outputIndex,
 		Sig:       signature,

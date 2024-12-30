@@ -11,6 +11,13 @@ type UnspentOutputs struct {
 	Count   int             `json:"count"`
 }
 
+type UnspentOutput struct {
+	OutputID    string `json:"output_id"`
+	OutputIndex int    `json:"output_index"`
+	Amount      int    `json:"amount"`
+	Address     string `json:"address"`
+}
+
 func (u UnspentOutputs) ToModel() []transaction.UnspentOutput {
 	oo := make([]transaction.UnspentOutput, u.Count)
 	for i, o := range u.Outputs {
@@ -19,27 +26,20 @@ func (u UnspentOutputs) ToModel() []transaction.UnspentOutput {
 	return oo
 }
 
-func unspentOutputsFromModel(oo []transaction.UnspentOutput) UnspentOutputs {
-	u := UnspentOutputs{
-		Outputs: make([]UnspentOutput, len(oo)),
-		Count:   len(oo),
+func unspentOutputsFromModel(unspents []transaction.UnspentOutput) UnspentOutputs {
+	uu := UnspentOutputs{
+		Outputs: make([]UnspentOutput, len(unspents)),
+		Count:   len(unspents),
 	}
-	for i, o := range oo {
-		u.Outputs[i] = UnspentOutput{
-			OutputID:    string(o.OutputID()),
-			OutputIndex: o.OutputIndex(),
-			Amount:      o.Amount(),
-			Address:     o.Address(),
+	for i, unspent := range unspents {
+		uu.Outputs[i] = UnspentOutput{
+			OutputID:    string(unspent.OutputID()),
+			OutputIndex: unspent.OutputIndex(),
+			Amount:      unspent.Amount(),
+			Address:     unspent.Address(),
 		}
 	}
-	return u
-}
-
-type UnspentOutput struct {
-	OutputID    string `json:"output_id"`
-	OutputIndex int    `json:"output_index"`
-	Amount      int    `json:"amount"`
-	Address     string `json:"address"`
+	return uu
 }
 
 type getUnspentOutputs struct {

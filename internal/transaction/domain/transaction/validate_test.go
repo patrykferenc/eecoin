@@ -18,7 +18,7 @@ func TestValidateCoinbaseInvalid(t *testing.T) {
 	// given a coinbase transaction
 	in := NewInput(ID("some-output-id"), 0, "sign")
 	tx := &Transaction{
-		In: []*Input{&in},
+		In: []*Input{in},
 		Ou: []*Output{NewOutput(COINBASE_AMOUNT, "some-address")},
 	}
 	blockHeight := 1

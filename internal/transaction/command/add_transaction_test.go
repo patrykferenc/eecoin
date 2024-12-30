@@ -22,7 +22,7 @@ func TestShouldAddTransaction(t *testing.T) {
 	// and given inputs
 	someInput := transaction.NewInput(transaction.ID("output-id"), 1, "signature")
 	inputs := []*transaction.Input{
-		&someInput,
+		someInput,
 	}
 	someOutput := transaction.NewOutput(10, "addressTo")
 	outputs := []*transaction.Output{
@@ -57,7 +57,7 @@ func TestShouldNotAddInvalidTransaction(t *testing.T) {
 	// and given inputs
 	someInput := transaction.NewInput(transaction.ID("output-id"), 1, "signature")
 	inputs := []*transaction.Input{
-		&someInput,
+		someInput,
 	}
 	someOutput := transaction.NewOutput(10, "addressTo")
 	outputs := []*transaction.Output{

@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"log/slog"
 	"net/http"
+
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 )
@@ -14,14 +15,11 @@ import (
 var url = "/block"
 
 type Broadcaster struct {
-	client *http.Client
+	client http.Client
 }
 
-func NewBroadcaster(client *http.Client) *Broadcaster {
-	if client == nil {
-		client = http.DefaultClient // todo: tidier api
-	}
-	return &Broadcaster{client: client}
+func NewBroadcaster() *Broadcaster {
+	return &Broadcaster{}
 }
 
 func (b *Broadcaster) Broadcast(block blockchain.Block, peers []string) error {
@@ -61,14 +59,7 @@ func (b *Broadcaster) Broadcast(block blockchain.Block, peers []string) error {
 	return nil // todo: return error if all peers failed
 }
 
-//	type Block struct {
-//		Index          int
-//		TimestampMilis int64
-//		ContentHash    uint64
-//		PrevHash       uint64
-//		Transactions   []TransactionID
-//		Challenge      Challenge
-//	}
+// TODO#30 - remove duplicate
 type blockDTO struct {
 	Index          int              `json:"index"`
 	TimestampMilis int64            `json:"timestamp"`
@@ -101,8 +92,7 @@ type inputDTO struct {
 }
 
 func (i inputDTO) asInput() *transaction.Input {
-	o := transaction.NewInput(transaction.ID(i.OutputID), i.OutputIndex, i.Signature)
-	return &o
+	return transaction.NewInput(transaction.ID(i.OutputID), i.OutputIndex, i.Signature)
 }
 
 type outputDTO struct {

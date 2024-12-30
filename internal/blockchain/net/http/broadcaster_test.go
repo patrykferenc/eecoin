@@ -2,13 +2,14 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	"github.com/stretchr/testify/assert"
@@ -55,8 +56,8 @@ func TestBroadcaster_Broadcast(t *testing.T) {
 
 	// and given
 	peerURLs := []string{mockServer.URL}
-	mockClient := mockServer.Client()
-	broadcaster := NewBroadcaster(mockClient)
+	// mockClient := mockServer.Client()
+	broadcaster := NewBroadcaster()
 	sampleTransaction := transaction.Transaction{Id: "skibidi", In: nil, Ou: nil}
 	sampleTransactionDTO := transactionDTO{ID: "skibidi", Inputs: []inputDTO{}, Outputs: []outputDTO{}}
 	sampleChallange := blockchain.Challenge{

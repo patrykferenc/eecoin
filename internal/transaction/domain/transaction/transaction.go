@@ -134,7 +134,7 @@ func NewGenesis(receiverAddr string, amount int) (*Transaction, error) {
 func NewCoinbase(receiverAddr string, blockHeight int) (*Transaction, error) {
 	in := NewInput("", blockHeight, "")
 	inputs := []*Input{
-		&in,
+		in,
 	}
 	outputs := []*Output{
 		NewOutput(COINBASE_AMOUNT, receiverAddr),
