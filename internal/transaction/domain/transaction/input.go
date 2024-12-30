@@ -9,16 +9,16 @@ import (
 )
 
 type Input struct {
-	OutputId  ID
-	OutputIdx int
-	Sig       string
+	outputID    ID
+	outputIndex int
+	signature   string
 }
 
 func NewInput(outputID ID, outputIndex int, signature string) *Input {
 	return &Input{
-		OutputId:  outputID,
-		OutputIdx: outputIndex,
-		Sig:       signature,
+		outputID:    outputID,
+		outputIndex: outputIndex,
+		signature:   signature,
 	}
 }
 
@@ -36,18 +36,22 @@ func (i *Input) sign(signer crypto.Signer, idToSign ID, referencedOutput Unspent
 		return fmt.Errorf("error signing input: %w", err)
 	}
 
-	i.Sig = string(s)
+	i.signature = string(s)
 	return nil
 }
 
 func (i Input) Signature() string {
-	return i.Sig
+	return i.signature
 }
 
 func (i Input) OutputID() ID {
-	return i.OutputId
+	return i.outputID
 }
 
 func (i Input) OutputIndex() int {
-	return i.OutputIdx
+	return i.outputIndex
+}
+
+func (i Input) MarshalBinary() ([]byte, error) {
+	return []byte(fmt.Sprintf("%s%d%s", i.outputID, i.outputIndex, i.signature)), nil
 }

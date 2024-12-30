@@ -16,17 +16,21 @@ func (h ID) String() string {
 	return string(h)
 }
 
+func (h ID) MarshalBinary() ([]byte, error) {
+	return []byte(h), nil
+}
+
 func newID(ins []*Input, outs []*Output) (ID, error) {
 	var sb strings.Builder
 
 	for _, in := range ins {
-		sb.WriteString(in.OutputId.String())
-		sb.WriteString(fmt.Sprint(in.OutputIdx))
+		sb.WriteString(in.outputID.String())
+		sb.WriteString(fmt.Sprint(in.outputIndex))
 	}
 
 	for _, out := range outs {
-		sb.WriteString(fmt.Sprint(out.Amoun))
-		sb.WriteString(fmt.Sprint(out.Addr))
+		sb.WriteString(fmt.Sprint(out.amount))
+		sb.WriteString(fmt.Sprint(out.address))
 	}
 
 	h := sha256.New()
@@ -38,10 +42,61 @@ func newID(ins []*Input, outs []*Output) (ID, error) {
 	return ID(h.Sum(nil)), nil
 }
 
-type Transaction struct { // TODO#30 - rename
-	Id ID
-	In []*Input
-	Ou []*Output
+type Transaction struct {
+	id      ID
+	inputs  []*Input
+	outputs []*Output
+}
+
+// ID() returns the transaction ID
+func (t Transaction) ID() ID {
+	return t.id
+}
+
+// Inputs() returns immutable slice of transactions inputs
+func (t Transaction) Inputs() []Input {
+	ii := make([]Input, len(t.inputs))
+	for i, in := range t.inputs {
+		ii[i] = *in
+	}
+	return ii
+}
+
+// Outputs() returns immutable slice of transactions outputs
+func (t Transaction) Outputs() []Output {
+	oo := make([]Output, len(t.outputs))
+	for i, out := range t.outputs {
+		oo[i] = *out
+	}
+	return oo
+}
+
+func (t Transaction) MarshalBinary() ([]byte, error) {
+	var transactionBytes []byte
+
+	for _, in := range t.inputs {
+		inBytes, err := in.MarshalBinary()
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling input: %w", err)
+		}
+		transactionBytes = append(transactionBytes, inBytes...)
+	}
+
+	for _, out := range t.outputs {
+		outBytes, err := out.MarshalBinary()
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling output: %w", err)
+		}
+		transactionBytes = append(transactionBytes, outBytes...)
+	}
+
+	transactionIDBytes, err := t.id.MarshalBinary()
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling transaction ID: %w", err)
+	}
+	transactionBytes = append(transactionBytes, transactionIDBytes...)
+
+	return transactionBytes, nil
 }
 
 func NewFrom(inputs []*Input, outputs []*Output) (*Transaction, error) {
@@ -51,35 +106,12 @@ func NewFrom(inputs []*Input, outputs []*Output) (*Transaction, error) {
 	}
 
 	return &Transaction{
-		Id: id,
-		In: inputs,
-		Ou: outputs,
+		id:      id,
+		inputs:  inputs,
+		outputs: outputs,
 	}, nil
 }
 
-func (t Transaction) ID() ID {
-	return t.Id
-}
-
-// Inputs() returns immutable slice of In
-func (t Transaction) Inputs() []Input {
-	ii := make([]Input, len(t.In))
-	for i, in := range t.In {
-		ii[i] = *in
-	}
-	return ii
-}
-
-// Outputs() returns immutable slice of Ou
-func (t Transaction) Outputs() []Output {
-	oo := make([]Output, len(t.Ou))
-	for i, out := range t.Ou {
-		oo[i] = *out
-	}
-	return oo
-}
-
-// TODO#30 - Addr can be taken from signer
 func New(receiverAddr string, senderAddr string, amount int, pk crypto.Signer, unspentOutputRepository UnspentOutputRepository) (*Transaction, error) {
 	unspentOutputs, err := unspentOutputRepository.GetByAddress(senderAddr)
 	if err != nil {
@@ -103,8 +135,8 @@ func New(receiverAddr string, senderAddr string, amount int, pk crypto.Signer, u
 		return nil, fmt.Errorf("error creating transaction: %w", err)
 	}
 
-	for i, in := range tx.In {
-		err := in.sign(pk, tx.Id, included[i])
+	for i, in := range tx.inputs {
+		err := in.sign(pk, tx.id, included[i])
 		if err != nil {
 			return nil, fmt.Errorf("error signing input: %w", err)
 		}
@@ -125,9 +157,9 @@ func NewGenesis(receiverAddr string, amount int) (*Transaction, error) {
 	}
 
 	return &Transaction{
-		Id: id,
-		In: inputs,
-		Ou: outputs,
+		id:      id,
+		inputs:  inputs,
+		outputs: outputs,
 	}, nil
 }
 
@@ -146,8 +178,8 @@ func NewCoinbase(receiverAddr string, blockHeight int) (*Transaction, error) {
 	}
 
 	return &Transaction{
-		Id: id,
-		In: inputs,
-		Ou: outputs,
+		id:      id,
+		inputs:  inputs,
+		outputs: outputs,
 	}, nil
 }

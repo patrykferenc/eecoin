@@ -6,21 +6,24 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"errors"
-	"github.com/gymshark/go-hasher"
-	t "github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"math/bits"
 	"math/rand/v2"
+
+	"github.com/gymshark/go-hasher"
+	t "github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 )
 
-var (
-	NotValidDifficulty = errors.New("difficulty not valid, it must be between 2 and 256")
-)
+var NotValidDifficulty = errors.New("difficulty not valid, it must be between 2 and 256")
 
 type Challenge struct {
 	Difficulty    int
 	Nonce         uint32
 	HashValue     string
 	TimeCapMillis int64
+}
+
+func (c Challenge) MarshalBinary() ([]byte, error) {
+	return []byte{byte(c.Difficulty), byte(c.Nonce), byte(c.TimeCapMillis)}, nil
 }
 
 func (c *Challenge) RollNonce(previousBlock Block, transactionData []t.Transaction, currentTimestampMillis int64) error {

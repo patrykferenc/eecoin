@@ -2,12 +2,13 @@ package blockchain
 
 import (
 	"bytes"
-	"encoding/gob"
 	"errors"
-	"github.com/gymshark/go-hasher"
-	t "github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+	"fmt"
 	"log/slog"
 	"time"
+
+	"github.com/gymshark/go-hasher"
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 )
 
 var (
@@ -25,15 +26,45 @@ type Block struct {
 	TimestampMilis int64
 	ContentHash    string
 	PrevHash       string
-	Transactions   []t.Transaction
+	Transactions   []transaction.Transaction
 	Challenge      Challenge
+}
+
+func (block Block) MarshalBinary() ([]byte, error) { // TODO#30 - maybe prettify this
+	var buffer bytes.Buffer
+	_, err := buffer.WriteString(fmt.Sprintf("%d%d%s", block.Index, block.TimestampMilis, block.PrevHash))
+	if err != nil {
+		return nil, fmt.Errorf("error writing to buffer: %w", err)
+	}
+
+	marshalledChallange, err := block.Challenge.MarshalBinary()
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling block: %w", err)
+	}
+	_, err = buffer.Write(marshalledChallange)
+	if err != nil {
+		return nil, fmt.Errorf("error writing to buffer: %w", err)
+	}
+
+	for _, transaction := range block.Transactions {
+		marshalledTransaction, err := transaction.MarshalBinary()
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling block: %w", err)
+		}
+		_, err = buffer.Write(marshalledTransaction)
+		if err != nil {
+			return nil, fmt.Errorf("error writing to buffer: %w", err)
+		}
+	}
+
+	return buffer.Bytes(), nil
 }
 
 type BlockChain struct {
 	Blocks []Block
 }
 
-func (chain *BlockChain) NewBlock(timestamp int64, transactions []t.Transaction, solved Challenge) (Block, error) {
+func (chain *BlockChain) NewBlock(timestamp int64, transactions []transaction.Transaction, solved Challenge) (Block, error) {
 	if !solved.MatchesDifficulty() {
 		slog.Error("Block not valid", "reason", "difficulty not met")
 		return Block{}, BlockDidNotMatchDiff
@@ -95,7 +126,7 @@ func (chain *BlockChain) GetBlockByHash(hash string) (Block, error) {
 	return Block{}, BlockNotFound
 }
 
-func (chain *BlockChain) GetBlockByTransactionID(id t.ID) (Block, error) {
+func (chain *BlockChain) GetBlockByTransactionID(id transaction.ID) (Block, error) {
 	for _, block := range chain.Blocks {
 		for _, transaction := range block.Transactions {
 			if transaction.ID() == id {
@@ -110,7 +141,6 @@ func (chain *BlockChain) GetCumulativeDifficulty() int64 {
 	var sum int64 = 0
 	for _, block := range chain.Blocks {
 		sum += int64(intPow(block.Challenge.Difficulty, 2))
-
 	}
 	return sum
 }
@@ -133,7 +163,7 @@ func GenerateGenesisBlock() Block {
 	genesisBlock := &Block{
 		Index:          0,
 		TimestampMilis: GenesisBlockTimestamp,
-		Transactions:   []t.Transaction{},
+		Transactions:   []transaction.Transaction{},
 		Challenge: Challenge{
 			TimeCapMillis: 1,
 			Difficulty:    9,
@@ -145,19 +175,11 @@ func GenerateGenesisBlock() Block {
 }
 
 func CalculateHash(block Block) (string, error) {
-	blockWithoutHash := Block{
-		Index:          block.Index,
-		TimestampMilis: block.TimestampMilis,
-		PrevHash:       block.PrevHash,
-		Transactions:   block.Transactions,
-		Challenge:      block.Challenge,
+	blockAsBytes, err := block.MarshalBinary()
+	if err != nil {
+		return "", fmt.Errorf("error calculating hash: %w", err)
 	}
-	var structByteBuffer bytes.Buffer
-	enc := gob.NewEncoder(&structByteBuffer)
-	if err := enc.Encode(blockWithoutHash); err != nil {
-		return InvalidContentHash, err
-	}
-	structureHash := hasher.Sha256(structByteBuffer.Bytes()).Base64()
+	structureHash := hasher.Sha256(blockAsBytes).Base64()
 	return structureHash, nil
 }
 
