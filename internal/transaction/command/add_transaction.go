@@ -47,7 +47,10 @@ func NewAddTransactionHandler(
 	publisher event.Publisher,
 	pool *transaction.Pool,
 ) AddTransactionHandler {
-	return &addTransactionHandler{}
+	return &addTransactionHandler{
+		pool:      *pool,
+		publisher: publisher,
+	}
 }
 
 func (h *addTransactionHandler) Handle(c AddTransaction) error {

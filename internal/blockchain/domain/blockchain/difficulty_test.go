@@ -1,29 +1,32 @@
 package blockchain
 
 import (
+	"testing"
+
 	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"github.com/stretchr/testify/assert"
-	"testing"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetDifficultyLowered(t *testing.T) {
-	chain := computeChain(10, 3, BlockGenerationDefaultIntervalMillis*BlockGenerationDefaultIntervalMillis/20+1)
+	chain := computeChain(10, 3, BlockGenerationDefaultIntervalMillis*BlockGenerationDefaultIntervalMillis/20+1, t)
 	result, err := GetDifficulty(*chain)
 	assert.NoError(t, err)
 	assert.Less(t, result, 3)
 }
 
 func TestGetDifficultyUpped(t *testing.T) {
-	chain := computeChain(10, 3, BlockGenerationDefaultIntervalMillis*DifficultyAdjustmentInterval/20-1)
+	chain := computeChain(10, 3, BlockGenerationDefaultIntervalMillis*DifficultyAdjustmentInterval/20-1, t)
 	result, err := GetDifficulty(*chain)
 	assert.NoError(t, err)
 	assert.Greater(t, result, 3)
 }
 
-func computeChain(elements, fixedDifficulty int, fixedTimecapOfChallenges int64) *BlockChain {
+func computeChain(elements, fixedDifficulty int, fixedTimecapOfChallenges int64, t *testing.T) *BlockChain {
 	genesisBlock := GenerateGenesisBlock()
 	timestamp := genesisBlock.TimestampMilis
-	chain, _ := ImportBlockchain([]Block{genesisBlock})
+	chain, err := ImportBlockchain([]Block{genesisBlock})
+	require.NoError(t, err)
 	transactions := make([]transaction.Transaction, 0)
 
 	for i := 1; i < elements+1; i++ {

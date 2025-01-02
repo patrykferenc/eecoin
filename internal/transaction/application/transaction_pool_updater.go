@@ -17,7 +17,7 @@ type UpdatableTransactionPoolRepository interface {
 }
 
 type UnspentOutputRetriever interface {
-	GetAllFrom(peers []string) ([]transaction.UnspentOutput, error)
+	Get(peers []string) ([]transaction.UnspentOutput, error)
 }
 
 type TransactionUpdater struct {
@@ -44,7 +44,7 @@ func (u *TransactionUpdater) UpdateFromRemote() error {
 		return err
 	}
 
-	remoteUnspent, err := u.unspentRetriever.GetAllFrom(peers)
+	remoteUnspent, err := u.unspentRetriever.Get(peers)
 	if err != nil {
 		return err
 	}

@@ -25,7 +25,7 @@ type Commands struct {
 }
 
 func NewComponent(selfAddress string, repo command.BlockChainRepository, peers peersquery.GetPeers, publisher event.Publisher, repository transaction.PoolRepository) Component {
-	broadcaster := http.NewBroadcaster(nil)
+	broadcaster := http.NewBroadcaster()
 
 	broadcastHandler := command.NewBroadcastBlockHandler(repo, broadcaster, peers)
 	mineBlockHandler := command.NewMineBlockHandler(selfAddress, repo, publisher, repository)

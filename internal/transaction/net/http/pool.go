@@ -8,7 +8,7 @@ import (
 	"github.com/patrykferenc/eecoin/internal/transaction/query"
 )
 
-const transactionPoolURL = "/pool"
+const poolURL = "/pool"
 
 func getTransactionPool(q query.GetTransactionPool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

@@ -11,24 +11,24 @@ import (
 	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 )
 
-var url = "/transaction"
+var transactionURL = "/transaction"
 
 type Broadcaster struct {
 	client   *http.Client
 	getPeers query.GetPeers
 }
 
-func NewBroadcaster(client *http.Client, p query.GetPeers) *Broadcaster {
-	if client == nil {
-		client = http.DefaultClient // todo: tidier api
-	}
-	return &Broadcaster{client: client, getPeers: p}
+func NewBroadcaster(p query.GetPeers) *Broadcaster {
+	return &Broadcaster{client: http.DefaultClient, getPeers: p}
 }
 
 func (b *Broadcaster) Broadcast(tx transaction.Transaction) error {
 	peers, err := b.getPeers.Get()
 	if err != nil {
 		return fmt.Errorf("could not get peers: %w", err)
+	}
+	if len(peers) == 0 {
+		return fmt.Errorf("no peers to broadcast to")
 	}
 	errors := make(chan error, len(peers))
 
@@ -40,15 +40,19 @@ func (b *Broadcaster) Broadcast(tx transaction.Transaction) error {
 
 	for _, peer := range peers {
 		go func(peer string) {
-			req, err := http.NewRequest(http.MethodPost, peer+url, bytes.NewReader(body))
+			req, err := http.NewRequest(http.MethodPost, peer+transactionURL, bytes.NewReader(body))
 			if err != nil {
 				errors <- err
 				return
 			}
 
-			_, err = b.client.Do(req)
+			res, err := b.client.Do(req)
 			if err != nil {
 				errors <- err
+				return
+			}
+			if res.StatusCode != http.StatusOK {
+				errors <- fmt.Errorf("unexpected status code: %d", res.StatusCode)
 				return
 			}
 
@@ -56,12 +60,18 @@ func (b *Broadcaster) Broadcast(tx transaction.Transaction) error {
 		}(peer)
 	}
 
+	failed := 0
 	for range peers {
 		err := <-errors
 		if err != nil {
 			slog.Warn("could not broadcast transaction", "error", err)
+			failed++
 		}
 	}
 
-	return nil // todo: return error if all peers failed
+	if failed == len(peers) {
+		return fmt.Errorf("could not broadcast transaction to any peer")
+	}
+
+	return nil
 }

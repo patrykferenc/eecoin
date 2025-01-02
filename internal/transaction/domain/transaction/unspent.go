@@ -7,7 +7,7 @@ type UnspentOutput struct {
 	outputID    ID
 	outputIndex int
 	amount      int
-	address     string // TODO#30
+	address     string
 }
 
 func (o UnspentOutput) OutputID() ID {
@@ -37,8 +37,8 @@ func NewUnspentOutput(outputID ID, outputIndex int, amount int, address string) 
 
 func (o UnspentOutput) AsInput() *Input {
 	return &Input{
-		OutputId:  o.outputID,
-		OutputIdx: o.outputIndex,
+		outputID:    o.outputID,
+		outputIndex: o.outputIndex,
 	}
 }
 

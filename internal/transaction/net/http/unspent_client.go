@@ -15,8 +15,18 @@ type unspentOutputsRepository struct {
 }
 
 func (u *unspentOutputsRepository) GetByOutputIDAndIndex(outputID transaction.ID, outputIndex int) (transaction.UnspentOutput, error) {
-	//TODO implement me
-	panic("implement me")
+	allOutputs, err := u.GetAll()
+	if err != nil {
+		return transaction.UnspentOutput{}, fmt.Errorf("failed to get unspent outputs: %w", err)
+	}
+
+	for _, output := range allOutputs {
+		if output.OutputID() == outputID && output.OutputIndex() == outputIndex {
+			return output, nil
+		}
+	}
+
+	return transaction.UnspentOutput{}, fmt.Errorf("output with ID %s and index %d not found on remote", outputID, outputIndex)
 }
 
 func NewUnspentOutputsRepository(remote string) *unspentOutputsRepository {
@@ -59,15 +69,13 @@ func (u *unspentOutputsRepository) GetByAddress(address string) ([]transaction.U
 }
 
 func (u *unspentOutputsRepository) Set(unspentOutputs []transaction.UnspentOutput) error {
-	return fmt.Errorf("not implemented for %v", unspentOutputs)
+	return fmt.Errorf("not implemented for %v", unspentOutputs) // TODO#30
 }
 
-func (u *unspentOutputsRepository) GetAllFrom(peers []string) ([]transaction.UnspentOutput, error) {
+func (u *unspentOutputsRepository) Get(peers []string) ([]transaction.UnspentOutput, error) { // TODO#30 - possibly tidy it up
 	var allErrors []error
 
 	for _, peer := range peers {
-		var dto query.UnspentOutputs
-
 		resp, err := u.client.Get(peer + unspentURL)
 		if err != nil {
 			allErrors = append(allErrors, fmt.Errorf("failed to get unspent outputs from %s: %w", peer, err))
@@ -82,6 +90,7 @@ func (u *unspentOutputsRepository) GetAllFrom(peers []string) ([]transaction.Uns
 
 		defer resp.Body.Close()
 
+		var dto query.UnspentOutputs
 		if err := json.NewDecoder(resp.Body).Decode(&dto); err != nil {
 			allErrors = append(allErrors, fmt.Errorf("failed to decode unspent outputs from %s: %w", peer, err))
 			continue

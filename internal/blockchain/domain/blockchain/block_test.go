@@ -1,21 +1,27 @@
 package blockchain
 
 import (
-	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"testing"
 	"time"
 
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestContentHash(t *testing.T) {
 	t.Parallel()
+
+	someTransaction, err := transaction.NewGenesis("someAddress", 1000)
+	require.NoError(t, err, "NewTransaction should not return an error")
+
 	block := Block{
 		Index:          1,
 		TimestampMilis: time.Date(2023, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 1).UnixMilli(),
-		ContentHash:    "25Jmo2kFkG9nr7d2DPDGz9kqMYKrFtSadslkuNuDLEY=",
+		ContentHash:    "uWiPiJw53c/iAfcNJ5AaoQk/gXF/12cak2mvAtH9EnE=",
 		PrevHash:       "D6bHWTk7daQ0dXVoxGG1XhtVIAwmLgoexNnv53wi3yc=",
-		Transactions:   make([]transaction.Transaction, 0),
+		Transactions:   []transaction.Transaction{*someTransaction},
 		Challenge:      Challenge{},
 	}
 	result, _ := CalculateHash(block)
@@ -56,6 +62,7 @@ func TestImportBlock_shouldError(t *testing.T) {
 		assertThat.Equal(tc.expectedErr, err)
 	}
 }
+
 func TestImportBlock_shouldWork(t *testing.T) {
 	t.Parallel()
 	assertThat := assert.New(t)

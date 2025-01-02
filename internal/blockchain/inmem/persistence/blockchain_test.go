@@ -1,9 +1,11 @@
 package persistence
 
 import (
+	"testing"
+
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	"github.com/stretchr/testify/assert"
-	"testing"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPersistBlockChain(t *testing.T) {
@@ -12,13 +14,14 @@ func TestPersistBlockChain(t *testing.T) {
 	// given
 	dir := t.TempDir() + "/chain"
 	genesis := blockchain.GenerateGenesisBlock()
-	chain, _ := blockchain.ImportBlockchain([]blockchain.Block{genesis})
+	chain, err := blockchain.ImportBlockchain([]blockchain.Block{genesis})
+	require.NoError(t, err)
 
 	// when - then
 	saveErr := Persist(*chain, dir)
 	assertThat.Nil(saveErr)
 
-	//when - then
+	// when - then
 	loaded, err := Load(dir)
 
 	assertThat.Nil(err)

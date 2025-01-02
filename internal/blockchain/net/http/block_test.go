@@ -4,14 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction/transactiontest"
+
 	"github.com/patrykferenc/eecoin/internal/blockchain/command"
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // // MockService mocks the blockchain.Service interface
@@ -42,8 +45,9 @@ func (m *mockHandler) Handle(command command.AddBlock) error {
 
 func TestBlockHandler_HandleBlockPost(t *testing.T) {
 	// given
-	sampleTransaction := transaction.Transaction{Id: "skibidi"}
-	sampleTransactionDTO := transactionDTO{ID: "skibidi"}
+	sampleTransaction, err := transactiontest.NewTransaction()
+	require.NoError(t, err, "NewTransaction should not return an error")
+	sampleTransactionDTO := transactionDTO{ID: sampleTransaction.ID().String()}
 	mockBlockDTO := blockDTO{
 		Index:          1,
 		TimestampMilis: 1630000000000,
@@ -56,7 +60,7 @@ func TestBlockHandler_HandleBlockPost(t *testing.T) {
 		TimestampMilis: mockBlockDTO.TimestampMilis,
 		ContentHash:    mockBlockDTO.ContentHash,
 		PrevHash:       mockBlockDTO.PrevHash,
-		Transactions:   []transaction.Transaction{sampleTransaction},
+		Transactions:   []transaction.Transaction{*sampleTransaction},
 	}
 
 	t.Run("Successful Block Post", func(t *testing.T) {

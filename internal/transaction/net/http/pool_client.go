@@ -15,7 +15,7 @@ func (t *TransactionPoolClient) Get(peers []string) ([]transaction.Transaction, 
 	var errs []error
 
 	for _, peer := range peers {
-		resp, err := t.client.Get(peer + transactionPoolURL)
+		resp, err := t.client.Get(peer + poolURL)
 		if err != nil {
 			errs = append(errs, err)
 			continue

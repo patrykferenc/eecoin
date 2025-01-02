@@ -42,7 +42,7 @@ func NewComponent(
 		publisher,
 		pool,
 	)
-	broadcaster := http.NewBroadcaster(nil, getPeers)
+	broadcaster := http.NewBroadcaster(getPeers)
 	broadcast := command.NewBroadcastTransactionHandler(
 		pool,
 		broadcaster,

@@ -9,8 +9,7 @@ type inputDTO struct {
 }
 
 func (i inputDTO) asInput() *transaction.Input {
-	o := transaction.NewInput(transaction.ID(i.OutputID), i.OutputIndex, i.Signature)
-	return &o
+	return transaction.NewInput(transaction.ID(i.OutputID), i.OutputIndex, i.Signature)
 }
 
 type outputDTO struct {

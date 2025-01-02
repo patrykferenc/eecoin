@@ -42,8 +42,8 @@ func (p *Pool) Update(unspent []UnspentOutput) error {
 
 	for _, u := range current {
 		for _, i := range u.Inputs() {
-			if _, ok := unspentIDs[i.OutputId]; !ok {
-				spentIDs[i.OutputId] = struct{}{}
+			if _, ok := unspentIDs[i.outputID]; !ok {
+				spentIDs[i.outputID] = struct{}{}
 				break
 			}
 		}
