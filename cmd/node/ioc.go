@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"io"
 	"log/slog"
 	"os"
+	"path"
 
 	"github.com/patrykferenc/eecoin/internal/blockchain"
 	"github.com/patrykferenc/eecoin/internal/blockchain/inmem"
@@ -63,10 +65,17 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 func getPeersFile(peersFilePath string) (io.ReadCloser, error) {
 	file, err := os.Open(peersFilePath)
 	if err != nil {
-		if err != os.ErrNotExist {
+		if !errors.Is(err, os.ErrNotExist) {
+			slog.Error("Failed to open peers file", "error", err)
 			return nil, err
 		}
 		slog.Warn("Peers file not found, creating a new one under", "path", peersFilePath)
+		err = ensureBaseDir(peersFilePath)
+		if err != nil {
+			slog.Error("Failed to create base dir for peers file", "error", err)
+			return nil, err
+		}
+
 		file, err = os.Create(peersFilePath)
 		if err != nil {
 			slog.Error("Failed to create peers file", "error", err)
@@ -75,4 +84,13 @@ func getPeersFile(peersFilePath string) (io.ReadCloser, error) {
 	}
 
 	return file, nil
+}
+
+func ensureBaseDir(fpath string) error {
+	baseDir := path.Dir(fpath)
+	info, err := os.Stat(baseDir)
+	if err == nil && info.IsDir() {
+		return nil
+	}
+	return os.MkdirAll(baseDir, 0755)
 }
