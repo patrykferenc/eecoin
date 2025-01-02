@@ -1,7 +1,10 @@
 peers:
-  filePath:
+  filePath: "/etc/eecoin/peers"
   pingDuration:
   updateFileDuration:
+
+persistence:
+  chainPath: "/etc/eecoin/chain"
 
 log:
   level:

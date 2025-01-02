@@ -3,12 +3,13 @@ package main
 import (
 	"crypto/x509"
 	"encoding/hex"
-	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
-	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
+	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
 
 	bc "github.com/patrykferenc/eecoin/internal/blockchain"
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
@@ -127,7 +128,6 @@ func scheduleMining(blockchainComponent *bc.Component, interrupt chan bool) {
 		h.Handle(blockchaincommand.MineBlock{InterruptChannel: interrupt})
 		slog.Info("Mining loop exited")
 	}
-
 }
 
 func scheduleSave(cfg *config.Config, peerComponent *peercntr.Component) {
