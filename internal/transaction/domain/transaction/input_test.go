@@ -66,5 +66,5 @@ func TestSignInputShouldNotSignWhenAddressDoesNotMatch(t *testing.T) {
 
 	// then
 	assert.Error(err)
-	assert.Equal("output Addr does not match the signer Addr", err.Error())
+	assert.Contains(err.Error(), "output Addr does not match the signer Addr")
 }

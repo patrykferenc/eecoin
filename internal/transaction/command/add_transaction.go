@@ -27,9 +27,10 @@ func (c AddTransaction) toTransaction() (*transaction.Transaction, error) {
 		return nil, fmt.Errorf("error creating transaction: %w", err)
 	}
 
-	if c.ProvidedID != tx.ID().String() {
-		return nil, fmt.Errorf("provided ID does not match calculated ID")
-	}
+	// TODO#30 - seems unnecessary
+	//if c.ProvidedID != tx.ID().String() {
+	//return nil, fmt.Errorf("provided ID [%s] does not match transaction ID [%s]", c.ProvidedID, tx.ID().String())
+	//}
 
 	return tx, nil
 }

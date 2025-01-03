@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction/transactiontest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,7 +14,7 @@ import (
 func TestContentHash(t *testing.T) {
 	t.Parallel()
 
-	someTransaction, err := transaction.NewGenesis("someAddress", 1000)
+	someTransaction, err := transactiontest.NewGenesisLike("someAddress", 1000)
 	require.NoError(t, err, "NewTransaction should not return an error")
 
 	block := Block{

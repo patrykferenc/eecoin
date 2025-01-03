@@ -49,8 +49,12 @@ func NewContainer(cfg *config.Config) (*Container, error) {
 	}
 
 	poolRepo := transactioninmem.NewPoolRepository()
-	tranasactionComponent := transaction.NewComponent(broker, poolRepo, peerComponent.Queries.GetPeers)
+	tranasactionComponent := transaction.NewComponent(broker, poolRepo, peerComponent.Queries.GetPeers, seenRepo)
 	blockChainComponent := blockchain.NewComponent(cfg.Persistence.SelfKey, seenRepo, peerComponent.Queries.GetPeers, broker, poolRepo)
+
+	if err := tranasactionComponent.Application.TransactionUpdater.UpdateFromBlockchain(); err != nil {
+		return nil, err
+	}
 
 	return &Container{
 		peerComponent:        &peerComponent,

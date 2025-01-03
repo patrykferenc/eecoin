@@ -160,10 +160,13 @@ func ImportBlockchain(blocks []Block) (*BlockChain, error) {
 }
 
 func GenerateGenesisBlock() Block {
+	genesisTransaction, _ := transaction.NewGenesis() // todo add error handling
 	genesisBlock := &Block{
 		Index:          0,
 		TimestampMilis: GenesisBlockTimestamp,
-		Transactions:   []transaction.Transaction{},
+		Transactions: []transaction.Transaction{
+			*genesisTransaction,
+		},
 		Challenge: Challenge{
 			TimeCapMillis: 1,
 			Difficulty:    9,

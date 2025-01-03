@@ -1,6 +1,8 @@
 package http
 
-import "github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+import (
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+)
 
 type inputDTO struct {
 	OutputID    string `json:"output_id"`
@@ -27,7 +29,7 @@ type transactionDTO struct {
 	Outputs []outputDTO `json:"outputs"`
 }
 
-func asDTO(tx transaction.Transaction) transactionDTO {
+func AsDTO(tx transaction.Transaction) transactionDTO {
 	inputs := make([]inputDTO, len(tx.Inputs()))
 	for i, in := range tx.Inputs() {
 		inputs[i] = inputDTO{

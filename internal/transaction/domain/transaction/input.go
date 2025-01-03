@@ -27,8 +27,8 @@ func (i *Input) sign(signer crypto.Signer, idToSign ID, referencedOutput Unspent
 	if err != nil {
 		return fmt.Errorf("error marshalling public key: %w", err)
 	}
-	if hex.EncodeToString(ourAddress) != referencedOutput.address {
-		return fmt.Errorf("output Addr does not match the signer Addr")
+	if ours := hex.EncodeToString(ourAddress); ours != referencedOutput.address {
+		return fmt.Errorf("output Addr does not match the signer Addr: %s != %s", ours, referencedOutput.address)
 	}
 
 	s, err := signer.Sign(rand.Reader, []byte(idToSign), crypto.SHA256)

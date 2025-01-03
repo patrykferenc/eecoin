@@ -32,7 +32,7 @@ func NewTransaction() (*transaction.Transaction, error) {
 	}
 	receiverAddr := hex.EncodeToString(receiverAddrRaw)
 
-	someTransaction, err := transaction.NewGenesis(string(senderAddr), 100)
+	someTransaction, err := NewGenesisLike(string(senderAddr), 100)
 	if err != nil {
 		return nil, err
 	}
@@ -46,4 +46,13 @@ func NewTransaction() (*transaction.Transaction, error) {
 	amount := 100
 
 	return transaction.New(string(receiverAddr), string(senderAddr), amount, privateSender, unspentOutputRepo)
+}
+
+func NewGenesisLike(receiverAddr string, amount int) (*transaction.Transaction, error) {
+	inputs := []*transaction.Input{}
+	outputs := []*transaction.Output{
+		transaction.NewOutput(amount, receiverAddr),
+	}
+
+	return transaction.NewFrom(inputs, outputs)
 }

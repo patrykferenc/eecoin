@@ -191,7 +191,7 @@ func pubSub(cntr *Container) {
 }
 
 func sync(cntr *Container) {
-	time.Sleep(5 * time.Second)
+	// time.Sleep(5 * time.Second) // TODO#30
 	err := cntr.transactionComponent.Application.TransactionUpdater.UpdateFromRemote()
 	if err != nil {
 		slog.Error("Failed to sync", "error", err)
