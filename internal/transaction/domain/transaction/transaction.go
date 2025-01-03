@@ -7,7 +7,11 @@ import (
 	"strings"
 )
 
-const COINBASE_AMOUNT = 100
+const (
+	COINBASE_AMOUNT = 100
+	GENESIS_AMOUNT  = 10000
+	GENESIS_ADDRESS = "3059301306072a8648ce3d020106082a8648ce3d03010703420004376119d02e6b95174f1c6af6bdc26c4280036104909fc8025dd3ebf8ed524e5abe265b67c1102edd0204ebdc3ab8556fe979be13a51526cea0d414b133061ec3" // public marshaled x509 PKIX
+)
 
 // ID is the transaction ID, represented as a base64 string
 type ID string
@@ -145,22 +149,13 @@ func New(receiverAddr string, senderAddr string, amount int, pk crypto.Signer, u
 	return tx, nil
 }
 
-func NewGenesis(receiverAddr string, amount int) (*Transaction, error) {
+func NewGenesis() (*Transaction, error) {
 	inputs := []*Input{}
 	outputs := []*Output{
-		NewOutput(amount, receiverAddr),
+		NewOutput(GENESIS_AMOUNT, GENESIS_ADDRESS),
 	}
 
-	id, err := newID(inputs, outputs)
-	if err != nil {
-		return nil, fmt.Errorf("error creating transaction ID: %w", err)
-	}
-
-	return &Transaction{
-		id:      id,
-		inputs:  inputs,
-		outputs: outputs,
-	}, nil
+	return NewFrom(inputs, outputs)
 }
 
 func NewCoinbase(receiverAddr string, blockHeight int) (*Transaction, error) {

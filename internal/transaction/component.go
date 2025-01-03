@@ -36,6 +36,7 @@ func NewComponent(
 	publisher event.Publisher,
 	poolRepository *inmem.PoolRepository,
 	getPeers peerquery.GetPeers,
+	blockchainRepo application.BlockChainRepository,
 ) Component {
 	pool := transaction.NewPool(poolRepository)
 	add := command.NewAddTransactionHandler(
@@ -58,6 +59,7 @@ func NewComponent(
 		poolClient,
 		unspent,
 		unspentClient,
+		blockchainRepo,
 		getPeers,
 	)
 

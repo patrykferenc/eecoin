@@ -17,7 +17,7 @@ func getTransactionPool(q query.GetTransactionPool) http.HandlerFunc {
 		var dto transactionPoolDTO
 		transactionsDTO := make([]transactionDTO, len(transactions))
 		for i, t := range transactions {
-			transactionsDTO[i] = asDTO(t)
+			transactionsDTO[i] = AsDTO(t)
 		}
 		dto.Transactions = transactionsDTO
 		dto.Count = len(transactions)

@@ -32,7 +32,7 @@ func (b *Broadcaster) Broadcast(tx transaction.Transaction) error {
 	}
 	errors := make(chan error, len(peers))
 
-	dto := asDTO(tx)
+	dto := AsDTO(tx)
 	body, err := json.Marshal(dto)
 	if err != nil {
 		return fmt.Errorf("could not marshal block: %w", err)
@@ -40,23 +40,7 @@ func (b *Broadcaster) Broadcast(tx transaction.Transaction) error {
 
 	for _, peer := range peers {
 		go func(peer string) {
-			req, err := http.NewRequest(http.MethodPost, peer+transactionURL, bytes.NewReader(body))
-			if err != nil {
-				errors <- err
-				return
-			}
-
-			res, err := b.client.Do(req)
-			if err != nil {
-				errors <- err
-				return
-			}
-			if res.StatusCode != http.StatusOK {
-				errors <- fmt.Errorf("unexpected status code: %d", res.StatusCode)
-				return
-			}
-
-			errors <- nil
+			errors <- SendTransaction(body, peer)
 		}(peer)
 	}
 
@@ -71,6 +55,23 @@ func (b *Broadcaster) Broadcast(tx transaction.Transaction) error {
 
 	if failed == len(peers) {
 		return fmt.Errorf("could not broadcast transaction to any peer")
+	}
+
+	return nil
+}
+
+func SendTransaction(body []byte, peer string) error {
+	req, err := http.NewRequest(http.MethodPost, peer+transactionURL, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", res.StatusCode)
 	}
 
 	return nil

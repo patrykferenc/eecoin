@@ -10,6 +10,7 @@ import (
 
 	"github.com/patrykferenc/eecoin/internal/common/mock"
 	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
+	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction/transactiontest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,7 +31,7 @@ func TestCreatingTransaction(t *testing.T) {
 	receiverAddr := hex.EncodeToString(receiverAddrRaw)
 
 	// and given unspent Ou
-	someTransaction, err := transaction.NewGenesis(string(senderAddr), 100)
+	someTransaction, err := transactiontest.NewGenesisLike(string(senderAddr), 100)
 	assert.NoError(err)
 	unspentOutputs := map[string][]transaction.UnspentOutput{
 		string(senderAddr): {transaction.NewUnspentOutput(someTransaction.ID(), 0, 100, string(senderAddr))},

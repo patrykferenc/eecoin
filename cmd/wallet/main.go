@@ -4,20 +4,20 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"fmt"
+	"log/slog"
+	"os"
+	"strconv"
+
 	"github.com/patrykferenc/eecoin/internal/transaction/domain/transaction"
 	"github.com/patrykferenc/eecoin/internal/transaction/net/http"
 	"github.com/patrykferenc/eecoin/internal/transaction/query"
 	"github.com/patrykferenc/eecoin/internal/wallet/domain/wallet"
 	"github.com/urfave/cli/v2"
-	"log/slog"
-	"os"
-	"strconv"
 )
 
 const remote = "http://localhost:8080"
 
 func main() {
-
 	app := &cli.App{
 		Name:     "wallet",
 		Usage:    "a cryptocurrency wallet",
@@ -26,12 +26,8 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		panic(err)
 	}
-
-	// sender addr zhexowany klucz publiczny
-	//transaction.New("", "",, unspentRepo)
-	// klient http
-	// nowa transakcja /net/http/
 }
+
 func setupCliCommands() []*cli.Command {
 	return []*cli.Command{
 		{
@@ -45,10 +41,23 @@ func setupCliCommands() []*cli.Command {
 				configPath := c.Args().Get(0)
 				passphrase := c.Args().Get(1)
 
-				wl, _ := wallet.ReadWalletFromDirectoryEcdsa(configPath, &passphrase)
+				wl, err := wallet.ReadWalletFromDirectoryEcdsa(configPath, &passphrase)
+				if err != nil {
+					slog.Error("Cannot read wallet")
+					os.Exit(1)
+				}
 				if wl.MainId == nil {
-					mainId, _ := wallet.NewEcdsaKey()
-					_ = wl.SetMainIdentity(&mainId)
+					mainId, err := wallet.NewEcdsaKey()
+					if err != nil {
+						slog.Error("Cannot generate main identity")
+						os.Exit(1)
+					}
+
+					err = wl.SetMainIdentity(&mainId)
+					if err != nil {
+						slog.Error("Cannot set main identity")
+						os.Exit(1)
+					}
 				}
 				return wl.ExportWalletEcdsa(configPath, &passphrase)
 			},
@@ -64,10 +73,23 @@ func setupCliCommands() []*cli.Command {
 				configPath := c.Args().Get(0)
 				passphrase := c.Args().Get(1)
 
-				wl, _ := wallet.ReadWalletFromDirectoryEcdsa(configPath, &passphrase)
-				newKey, _ := wallet.NewEcdsaKey()
-				_ = wl.Add(newKey)
-				err := wl.ExportWalletEcdsa(configPath, &passphrase)
+				wl, err := wallet.ReadWalletFromDirectoryEcdsa(configPath, &passphrase)
+				if err != nil {
+					slog.Error("Cannot read wallet")
+					os.Exit(1)
+				}
+				newKey, err := wallet.NewEcdsaKey()
+				if err != nil {
+					slog.Error("Cannot generate key")
+					os.Exit(1)
+				}
+				err = wl.Add(newKey)
+				if err != nil {
+					slog.Error("Cannot add key")
+					os.Exit(1)
+				}
+
+				err = wl.ExportWalletEcdsa(configPath, &passphrase)
 				return err
 			},
 		},
@@ -81,7 +103,11 @@ func setupCliCommands() []*cli.Command {
 				}
 				configPath := c.Args().Get(0)
 				passphrase := c.Args().Get(1)
-				wl, _ := wallet.ReadWalletFromDirectoryEcdsa(configPath, &passphrase)
+				wl, err := wallet.ReadWalletFromDirectoryEcdsa(configPath, &passphrase)
+				if err != nil {
+					slog.Error("Cannot read wallet")
+					os.Exit(1)
+				}
 				for k, v := range wl.Keys {
 					fmt.Printf("pub: %s | private %t\n", k, v.Present)
 				}
@@ -141,7 +167,11 @@ func setupCliCommands() []*cli.Command {
 				}
 				configPath := c.Args().Get(2)
 				passphrase := c.Args().Get(3)
-				wl, _ := wallet.ReadWalletFromDirectoryEcdsa(configPath, &passphrase)
+				wl, err := wallet.ReadWalletFromDirectoryEcdsa(configPath, &passphrase)
+				if err != nil {
+					slog.Error("Cannot read wallet")
+					os.Exit(1)
+				}
 
 				if !wl.Keys[index].Present {
 					slog.Error("Key not present")
@@ -151,7 +181,6 @@ func setupCliCommands() []*cli.Command {
 				recMarshalled, err := x509.MarshalPKIXPublicKey(reciverPub)
 				if err != nil {
 					fmt.Printf("Cannot marshal public key: %s\n", err)
-
 				}
 				recieverAddr := hex.EncodeToString(recMarshalled)
 

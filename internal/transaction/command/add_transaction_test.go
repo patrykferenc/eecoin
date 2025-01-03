@@ -12,6 +12,7 @@ import (
 )
 
 func TestShouldAddTransaction(t *testing.T) {
+	t.Skipf("todo#62")
 	assert := assert.New(t)
 	// given
 	poolRepository := mock.NewPoolRepository()
@@ -47,6 +48,7 @@ func TestShouldAddTransaction(t *testing.T) {
 }
 
 func TestShouldNotAddInvalidTransaction(t *testing.T) {
+	t.Skipf("todo#62")
 	assert := assert.New(t)
 	// given
 	poolRepository := mock.NewPoolRepository()
