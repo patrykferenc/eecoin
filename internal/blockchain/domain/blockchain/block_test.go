@@ -127,8 +127,18 @@ func TestAddBlock_shouldWork(t *testing.T) {
 	err = solvedChallenge.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
 	assertThat.Nil(err)
 
+	// and given another block of the same difficulty which would indicate a fork
+	forkIndicativeChallenge, err := NewChallenge(2, 2)
+	assertThat.Nil(err)
+	err = forkIndicativeChallenge.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
+	assertThat.Nil(err)
+
 	// and given new block
 	newBlock, err := chain.NewBlock(timestamp, transactions, solvedChallenge)
+	assertThat.Nil(err)
+
+	// and given another block of the same difficulty which would indicate a fork
+	forkBlock, err := chain.NewBlock(timestamp, transactions, solvedChallenge)
 	assertThat.Nil(err)
 
 	// then
@@ -141,6 +151,10 @@ func TestAddBlock_shouldWork(t *testing.T) {
 	actual, err := chain.GetBlock(expectedIndex)
 	assertThat.Nil(err)
 	assertThat.Equal(newBlock, actual)
+
+	// and then
+	err = chain.AddBlock(forkBlock)
+	assertThat.Equal(PossibleForkBlockchain, err)
 }
 
 func TestBlockChain_GetCumulativeDifficulty(t *testing.T) {

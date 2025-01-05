@@ -12,13 +12,14 @@ import (
 )
 
 var (
-	InvalidContentHash    = "Invalid Content Hash"
-	BlockNotFound         = errors.New("block not found")
-	BlockNotValid         = errors.New("block is not valid")
-	BlockDidNotMatchDiff  = errors.New("block did not match difficulty")
-	BlockWasNotWithinTime = errors.New("block was not within time")
-	ChainNotValid         = errors.New("chain not valid")
-	GenesisBlockTimestamp = time.Date(2024, 11, 16, 20, 23, 0, 0, time.UTC).UnixMilli()
+	InvalidContentHash     = "Invalid Content Hash"
+	BlockNotFound          = errors.New("block not found")
+	BlockNotValid          = errors.New("block is not valid")
+	BlockDidNotMatchDiff   = errors.New("block did not match difficulty")
+	BlockWasNotWithinTime  = errors.New("block was not within time")
+	ChainNotValid          = errors.New("chain not valid")
+	PossibleForkBlockchain = errors.New("possible fork in blockchain")
+	GenesisBlockTimestamp  = time.Date(2024, 11, 16, 20, 23, 0, 0, time.UTC).UnixMilli()
 )
 
 type Block struct {
@@ -93,6 +94,10 @@ func (chain *BlockChain) AddBlock(new Block) error {
 	if isValidBasedOnPrevious(new, chain.GetLast()) {
 		chain.Blocks = append(chain.Blocks, new)
 		return nil
+	}
+	previousBasedOnIndex, err := chain.GetBlock(new.Index - 1)
+	if err == nil && isValidBasedOnPrevious(new, previousBasedOnIndex) {
+		return PossibleForkBlockchain
 	}
 	return BlockNotValid
 }
