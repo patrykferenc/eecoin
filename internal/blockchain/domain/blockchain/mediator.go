@@ -24,8 +24,7 @@ func NewForkMediator(primaryChain *BlockChain) *ForkMediator {
 }
 
 func (f *ForkMediator) AddBlock(new Block) error {
-	primaryChain := f.primaryChain
-	err := primaryChain.AddBlock(new)
+	err := f.primaryChain.AddBlock(new)
 	if err == nil {
 		return nil
 	}
@@ -66,7 +65,7 @@ func (f *ForkMediator) AddBlock(new Block) error {
 		}
 
 		f.cleanupChainsWithLowerThanPrimaryDifficulty(maxCumulativeDifficulty)
-		primaryChain = maxChainPtr
+		f.primaryChain = maxChainPtr
 	}
 	return nil
 }
