@@ -97,6 +97,7 @@ func (chain *BlockChain) AddBlock(new Block) error {
 	}
 	previousBasedOnIndex, err := chain.GetBlock(new.Index - 1)
 	if err == nil && isValidBasedOnPrevious(new, previousBasedOnIndex) {
+		// after that we need to check difficulty
 		return PossibleForkBlockchain
 	}
 	return BlockNotValid
@@ -105,6 +106,12 @@ func (chain *BlockChain) AddBlock(new Block) error {
 func (chain *BlockChain) RemoveBlocksStartingWithIndex(index int) {
 	shortenedChain := chain.Blocks[:len(chain.Blocks)-index]
 	chain.Blocks = shortenedChain
+}
+
+func (chain *BlockChain) GetShortenedUpToIndex(index int) BlockChain {
+	return BlockChain{
+		Blocks: chain.Blocks[:index],
+	}
 }
 
 func (chain *BlockChain) GetBlock(index int) (Block, error) {
@@ -215,7 +222,8 @@ func isValidBasedOnPrevious(newBlock Block, previous Block) bool {
 }
 
 func blockCreatedAfterPreviousWithinTimeCap(timestamp int64, solved Challenge, latest Block) bool {
-	return timestamp-latest.TimestampMilis >= solved.TimeCapMillis
+	var timeDiff = timestamp - latest.TimestampMilis
+	return timeDiff >= solved.TimeCapMillis && timeDiff <= solved.TimeCapMillis*int64(intPow(2, solved.Difficulty))
 }
 
 func intPow(n, m int) int {
