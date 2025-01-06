@@ -6,7 +6,7 @@ var NotFoundAmongLocalChainCopies = errors.New("block not found among local chai
 
 type Mediator interface {
 	AddBlock(Block) error
-	GetHighestValueChain() (*BlockChain, error)
+	GetPrimaryChain() (*BlockChain, error)
 }
 
 type ForkMediator struct {
@@ -79,7 +79,7 @@ func (f *ForkMediator) cleanupChainsWithLowerThanPrimaryDifficulty(maxCumulative
 	}
 }
 
-func (f *ForkMediator) GetHighestValueChain() (*BlockChain, error) {
+func (f *ForkMediator) GetPrimaryChain() (*BlockChain, error) {
 	if f.primaryChain == nil {
 		return nil, errors.New("no primary chain")
 	}

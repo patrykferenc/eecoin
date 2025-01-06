@@ -1,6 +1,7 @@
 package inmem
 
 import (
+	"errors"
 	"github.com/patrykferenc/eecoin/internal/blockchain/inmem/persistence"
 
 	"github.com/patrykferenc/eecoin/internal/blockchain/domain/blockchain"
@@ -9,6 +10,7 @@ import (
 
 type BlockChain struct {
 	chain     *blockchain.BlockChain
+	mediator  blockchain.Mediator
 	publisher event.Publisher // TODO#30 - we will refactor this class and send the event from the command handler
 }
 
@@ -18,9 +20,14 @@ func NewBlockChain(publisher event.Publisher) (*BlockChain, error) {
 	if err != nil {
 		return nil, err
 	}
+	mediator := blockchain.NewForkMediator(ch)
+	if mediator == nil {
+		return nil, errors.New("could not create mediator")
+	}
 	return &BlockChain{
 		chain:     ch,
 		publisher: publisher,
+		mediator:  mediator,
 	}, nil
 }
 
@@ -33,9 +40,13 @@ func LoadPersistedBlockchain(path string) (*BlockChain, error) {
 }
 
 func (b *BlockChain) GetChain() blockchain.BlockChain {
-	return *b.chain
+	primaryChain, err := b.mediator.GetPrimaryChain()
+	if err != nil {
+		return blockchain.BlockChain{}
+	}
+	return *primaryChain
 }
 
 func (b *BlockChain) PutBlock(block blockchain.Block) error {
-	return b.chain.AddBlock(block)
+	return b.mediator.AddBlock(block)
 }

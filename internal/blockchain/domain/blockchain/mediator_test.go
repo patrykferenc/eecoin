@@ -61,7 +61,7 @@ func TestForkMediator_AddBlock(t *testing.T) {
 	err = mediator.AddBlock(forkBlock)
 	assertThat.Nil(err)
 
-	highestValueChain, err := mediator.GetHighestValueChain()
+	highestValueChain, err := mediator.GetPrimaryChain()
 	assertThat.Nil(err)
 	assertThat.Equal(primaryChain, highestValueChain)
 
