@@ -11,6 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var DefaultTimeShift int64 = 40000
+var DefaultTestTimestamp = time.Date(2024, 11, 16, 20, 23, 0, 0, time.UTC).UnixMilli() + DefaultTimeShift
+
 func TestContentHash(t *testing.T) {
 	t.Parallel()
 
@@ -92,11 +95,11 @@ func TestNewBlock(t *testing.T) {
 	chain, err := ImportBlockchain([]Block{genesis})
 	assertThat.Nil(err)
 	// and given
-	timestamp := time.Date(2028, 2, 3, 12, 0, 0, 0, time.UTC).UnixMilli()
+	timestamp := DefaultTestTimestamp
 	transactions := make([]transaction.Transaction, 0)
 
 	// and given
-	solvedChallenge, err := NewChallenge(2, 2)
+	solvedChallenge, err := NewChallenge(2, DefaultTimeShift)
 	assertThat.Nil(err)
 	err = solvedChallenge.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
 	assertThat.Nil(err)
@@ -118,11 +121,59 @@ func TestAddBlock_shouldWork(t *testing.T) {
 	chain, err := ImportBlockchain([]Block{genesis})
 	assertThat.Nil(err)
 	// and given
-	timestamp := time.Date(2025, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 120).UnixMilli()
+	timestamp := DefaultTestTimestamp
 	transactions := make([]transaction.Transaction, 0)
 
 	// and given
-	solvedChallenge, err := NewChallenge(2, 2)
+	solvedChallenge, err := NewChallenge(2, DefaultTimeShift)
+	assertThat.Nil(err)
+	err = solvedChallenge.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
+	assertThat.Nil(err)
+
+	// and given another block of the same difficulty which would indicate a fork
+	forkIndicativeChallenge, err := NewChallenge(2, DefaultTimeShift)
+	assertThat.Nil(err)
+	err = forkIndicativeChallenge.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
+	assertThat.Nil(err)
+
+	// and given new block
+	newBlock, err := chain.NewBlock(timestamp, transactions, solvedChallenge)
+	assertThat.Nil(err)
+
+	// and given another block of the same difficulty which would indicate a fork
+	forkBlock, err := chain.NewBlock(timestamp, transactions, solvedChallenge)
+	assertThat.Nil(err)
+
+	// then
+	err = chain.AddBlock(newBlock)
+	assertThat.Nil(err)
+	// and then
+	assertThat.Equal(newBlock, chain.GetLast())
+	// and then
+	expectedIndex := 1
+	actual, err := chain.GetBlock(expectedIndex)
+	assertThat.Nil(err)
+	assertThat.Equal(newBlock, actual)
+
+	// and then
+	err = chain.AddBlock(forkBlock)
+	assertThat.Equal(PossibleForkBlockchain, err)
+}
+
+func TestGetShortenedUpToIndex_shouldWork(t *testing.T) {
+	t.Parallel()
+	assertThat := assert.New(t)
+
+	// given
+	genesis := GenerateGenesisBlock()
+	chain, err := ImportBlockchain([]Block{genesis})
+	assertThat.Nil(err)
+	// and given
+	timestamp := DefaultTestTimestamp
+	transactions := make([]transaction.Transaction, 0)
+
+	// and given
+	solvedChallenge, err := NewChallenge(2, DefaultTimeShift)
 	assertThat.Nil(err)
 	err = solvedChallenge.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
 	assertThat.Nil(err)
@@ -141,6 +192,11 @@ func TestAddBlock_shouldWork(t *testing.T) {
 	actual, err := chain.GetBlock(expectedIndex)
 	assertThat.Nil(err)
 	assertThat.Equal(newBlock, actual)
+
+	// and then
+	shortenedChain := chain.GetShortenedUpToIndex(1)
+	assertThat.Equal(1, len(shortenedChain.Blocks))
+	assertThat.Equal(genesis, shortenedChain.GetLast())
 }
 
 func TestBlockChain_GetCumulativeDifficulty(t *testing.T) {
@@ -155,17 +211,17 @@ func TestBlockChain_GetCumulativeDifficulty(t *testing.T) {
 	assertThat.Nil(err)
 
 	// and given
-	timestamp := time.Date(2025, 2, 3, 12, 0, 0, 0, time.UTC).Add(time.Millisecond * 120).UnixMilli()
+	timestamp := DefaultTestTimestamp
 	transactions := make([]transaction.Transaction, 0)
 
 	// and given
-	solvedChallengeOne, err := NewChallenge(2, 2)
+	solvedChallengeOne, err := NewChallenge(2, DefaultTimeShift)
 	assertThat.Nil(err)
 	err = solvedChallengeOne.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
 	assertThat.Nil(err)
 
 	// and given
-	solvedChallengeTwo, err := NewChallenge(3, 2)
+	solvedChallengeTwo, err := NewChallenge(3, DefaultTimeShift)
 	assertThat.Nil(err)
 	err = solvedChallengeTwo.RollUntilMatchesDifficulty(genesis, transactions, timestamp)
 	assertThat.Nil(err)
@@ -185,13 +241,13 @@ func TestBlockChain_GetCumulativeDifficulty(t *testing.T) {
 	assertThat.Nil(err)
 
 	// when calculating third block to one of chains
-	solvedChallengeThree, err := NewChallenge(3, 2)
+	solvedChallengeThree, err := NewChallenge(3, DefaultTimeShift)
 	assertThat.Nil(err)
 
-	err = solvedChallengeThree.RollUntilMatchesDifficulty(chainTwo.GetLast(), transactions, timestamp+200)
+	err = solvedChallengeThree.RollUntilMatchesDifficulty(chainTwo.GetLast(), transactions, timestamp+DefaultTimeShift)
 	assertThat.Nil(err)
 
-	newBlockThree, err := chainTwo.NewBlock(timestamp+200, transactions, solvedChallengeThree)
+	newBlockThree, err := chainTwo.NewBlock(timestamp+DefaultTimeShift, transactions, solvedChallengeThree)
 	assertThat.Nil(err)
 
 	err = chainTwo.AddBlock(newBlockThree)
